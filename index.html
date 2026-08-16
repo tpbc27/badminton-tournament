@@ -9,9 +9,9 @@
         .container { max-width: 1000px; margin: 0 auto; }
         h1 { text-align: center; color: #38bdf8; }
         .card { background: #1e293b; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        textarea { width: 100%; height: 80px; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 6px; padding: 10px; box-sizing: border-box; }
+        textarea { width: 100%; height: 100px; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 6px; padding: 10px; box-sizing: border-box; }
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        button { flex: 1; background: #10b981; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button { flex: 1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
         button:hover { background: #059669; }
         button.reset { background: #ef4444; }
         .bracket { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; }
@@ -29,7 +29,7 @@
     <div id="champ" class="champ">🏆 冠军: <span id="champ-name"></span></div>
     <div class="card">
         <p>请输入选手名单（每行一人/队）：</p>
-        <textarea id="names" placeholder="选手A&#10;选手B&#10;选手C&#10;选手D"></textarea>
+        <textarea id="names"></textarea>
         <div class="btn-group">
             <button onclick="start(true)">🔀 随机抽签对阵</button>
             <button onclick="start(false)">📋 顺序对阵</button>
@@ -41,14 +41,14 @@
 
 <script>
     let data = JSON.parse(localStorage.getItem('bm_data')) || null;
-    window.onload = () => { if (data) render(); };
+    window.onload = function() { if (data) render(); };
 
     function start(shuffle) {
-        let input = document.getElementById('names').value.trim();
-        if (!input) return alert('请先输入名单！');
-        let list = input.split('\n').map(s => s.trim()).filter(Boolean);
-        if (list.length < 2) return alert('至少需要2名选手！');
-        if (shuffle) list.sort(() => Math.random() - 0.5);
+        let input = document.getElementById('names').value;
+        if (!input || !input.trim()) { alert('请先输入选手名单！'); return; }
+        let list = input.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+        if (list.length < 2) { alert('至少需要2名选手！'); return; }
+        if (shuffle) { list.sort(function(){ return Math.random() - 0.5; }); }
 
         let size = 2;
         while (size < list.length) size *= 2;
@@ -58,7 +58,7 @@
         let r1 = [];
         for (let i = 0; i < size; i += 2) {
             let p1 = list[i], p2 = list[i+1];
-            let isP2Bye = p2 === "轮空(BYE)", isP1Bye = p1 === "轮空(BYE)";
+            let isP2Bye = (p2 === "轮空(BYE)"), isP1Bye = (p1 === "轮空(BYE)");
             r1.push({
                 p1: p1, p2: p2, s1: isP2Bye ? 21 : 0, s2: isP1Bye ? 21 : 0,
                 win: isP2Bye ? p1 : (isP1Bye ? p2 : null)
@@ -83,4 +83,70 @@
         for (let r = 0; r < data.length - 1; r++) {
             for (let i = 0; i < data[r].length; i += 2) {
                 let nextM = Math.floor(i / 2);
-                if (data[r][i].win) data[r+1][ne
+                if (data[r][i].win) data[r+1][nextM].p1 = data[r][i].win;
+                if (data[r][i+1].win) data[r+1][nextM].p2 = data[r][i+1].win;
+            }
+        }
+        let finalWin = data[data.length - 1][0].win;
+        if (finalWin) {
+            document.getElementById('champ').style.display = 'block';
+            document.getElementById('champ-name').innerText = finalWin;
+        } else {
+            document.getElementById('champ').style.display = 'none';
+        }
+        localStorage.setItem('bm_data', JSON.stringify(data));
+        render();
+    }
+
+    function render() {
+        let b = document.getElementById('bracket');
+        b.innerHTML = '';
+        data.forEach(function(round, r) {
+            let col = document.createElement('div');
+            col.className = 'col';
+            round.forEach(function(m, mIdx) {
+                let div = document.createElement('div');
+                div.className = 'match';
+                div.onclick = function(){ winPrompt(r, mIdx); };
+                div.innerHTML = `
+                    <div class="player ${m.win === m.p1 && m.p1 !== '待定' ? 'winner' : ''}">
+                        <span>${m.p1}</span><span>${m.s1}</span>
+                    </div>
+                    <div class="player ${m.win === m.p2 && m.p2 !== '待定' ? 'winner' : ''}">
+                        <span>${m.p2}</span><span>${m.s2}</span>
+                    </div>
+                `;
+                col.appendChild(div);
+            });
+            b.appendChild(col);
+        });
+    }
+
+    function winPrompt(r, mIdx) {
+        let m = data[r][mIdx];
+        if (m.p1 === '待定' || m.p2 === '待定' || m.p1 === '轮空(BYE)' || m.p2 === '轮空(BYE)') return;
+        let s1 = prompt("请输入 [" + m.p1 + "] 的比分:", m.s1 || "21");
+        if (s1 === null) return;
+        let s2 = prompt("请输入 [" + m.p2 + "] 的比分:", m.s2 || "19");
+        if (s2 === null) return;
+        
+        m.s1 = parseInt(s1) || 0;
+        m.s2 = parseInt(s2) || 0;
+        if (m.s1 > m.s2) m.win = m.p1;
+        else if (m.s2 > m.s1) m.win = m.p2;
+        else return alert('不能平局！');
+        
+        updateBracket();
+    }
+
+    function clearData() {
+        if (confirm('确定清空比赛吗？')) {
+            localStorage.removeItem('bm_data');
+            data = null;
+            document.getElementById('bracket').innerHTML = '';
+            document.getElementById('champ').style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
