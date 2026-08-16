@@ -1,1 +1,1015 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Pengurusan Pertandingan Badminton</title>
+    
+    <!-- PWA Manifest & Theme -->
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Sistem%20Badminton%22%2C%22short_name%22%3A%22Badminton%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%231e3a8a%22%7D">
 
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Touch safety for mobile referees */
+        .touch-action-manipulation {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar for bracket display */
+        .bracket-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .bracket-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-blue-200">
+
+    <!-- Header / Navigation Bar -->
+    <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('dashboard')">
+                <i data-lucide="trophy" class="w-6 h-6 text-yellow-400"></i>
+                <span class="font-bold text-lg tracking-wide">BadmintonMatch</span>
+            </div>
+            <div id="tournamentBadge" class="hidden sm:block text-xs bg-blue-800 border border-blue-700 px-3 py-1 rounded-full text-blue-200 font-medium truncate max-w-[200px]">
+                Tiada Kejohanan Active
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 pb-24 sm:pb-8">
+        
+        <!-- ALERT TOAST -->
+        <div id="toast" class="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 hidden bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl text-sm font-medium flex items-center space-x-2 transition-all duration-300">
+            <i data-lucide="info" class="w-4 h-4 text-blue-400"></i>
+            <span id="toastMsg">Pesanan di sini</span>
+        </div>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 opacity-10">
+                    <i data-lucide="trophy" class="w-48 h-48"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-300">Sistem Pengurusan Pertandingan</span>
+                    <h1 id="dashName" class="text-2xl sm:text-3xl font-extrabold mt-1">Sila Cipta Pertandingan</h1>
+                    <p id="dashMeta" class="text-sm text-blue-200 mt-2 flex flex-wrap gap-4">
+                        <span><i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>--</span>
+                        <span><i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>--</span>
+                    </p>
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <button onclick="switchTab('pertandingan')" class="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-4 py-2 rounded-xl text-sm flex items-center transition shadow-md active:scale-95">
+                            <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i> Cipta Baru
+                        </button>
+                        <button onclick="switchTab('peserta')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center transition backdrop-blur-sm">
+                            <i data-lucide="users" class="w-4 h-4 mr-1.5"></i> Peserta
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-slate-400 text-xs font-medium uppercase">Jumlah Peserta</div>
+                    <div id="statPeserta" class="text-2xl font-black text-slate-800 mt-1">0</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-slate-400 text-xs font-medium uppercase">Belum Bermula</div>
+                    <div id="statPending" class="text-2xl font-black text-slate-600 mt-1">0</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                    <div class="text-amber-600 text-xs font-medium uppercase">Berlangsung</div>
+                    <div id="statLive" class="text-2xl font-black text-amber-600 mt-1">0</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                    <div class="text-emerald-600 text-xs font-medium uppercase">Selesai</div>
+                    <div id="statTamat" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Quick Action Matches -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-slate-800 flex items-center">
+                        <i data-lucide="play-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Perlawanan Aktif & Terdekat
+                    </h2>
+                    <button onclick="switchTab('jadual')" class="text-blue-600 text-xs font-semibold hover:underline">Lihat Semua</button>
+                </div>
+                <div id="dashActiveMatches" class="space-y-3">
+                    <p class="text-sm text-slate-400 text-center py-4">Tiada perlawanan dijanakan lagi.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CIPTA PERTANDINGAN -->
+        <section id="tab-pertandingan" class="tab-content hidden max-w-xl mx-auto">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center border-b pb-3">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Cipta Pertandingan Baru
+                </h2>
+                
+                <form id="formPertandingan" onsubmit="saveTournament(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pertandingan</label>
+                        <input type="text" id="tName" required placeholder="Cth: Kejohanan Terbuka Club 2026" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tarikh</label>
+                            <input type="date" id="tDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Penganjur</label>
+                            <input type="text" id="tOrgan" placeholder="Cth: Kelab Badminton Belia" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tempat / Lokasi</label>
+                        <input type="text" id="tVenue" placeholder="Cth: Dewan Serbaguna Kluang" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Kategori</label>
+                            <select id="tCat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                                <option value="Perseorangan Lelaki">Perseorangan Lelaki</option>
+                                <option value="Perseorangan Perempuan">Perseorangan Perempuan</option>
+                                <option value="Beregu Lelaki">Beregu Lelaki</option>
+                                <option value="Beregu Perempuan">Beregu Perempuan</option>
+                                <option value="Beregu Campuran">Beregu Campuran</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Format</label>
+                            <select id="tFormat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                                <option value="Single Elimination">Penyingkiran Tunggal (Knockout)</option>
+                                <option value="Round Robin" disabled>Round Robin (Akan Datang)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center">
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan & Mulakan
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 3: PESERTA -->
+        <section id="tab-peserta" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Pengurusan Peserta</h2>
+                    <p class="text-xs text-slate-500">Tambah pemain atau pasukan beregu sebelum menjana jadual.</p>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="openAddParticipantModal()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center justify-center transition">
+                        <i data-lucide="user-plus" class="w-4 h-4 mr-1.5"></i> Tambah Peserta
+                    </button>
+                    <button onclick="generateSchedule()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center justify-center transition">
+                        <i data-lucide="git-pull-request" class="w-4 h-4 mr-1.5"></i> Jana Jadual
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center px-3 shadow-sm">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
+                <input type="text" id="searchPeserta" oninput="renderParticipants()" placeholder="Cari nama atau kelab..." class="w-full text-sm outline-none bg-transparent">
+            </div>
+
+            <!-- List -->
+            <div id="pesertaList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Dynamic Participants -->
+            </div>
+        </section>
+
+        <!-- TAB 4: JADUAL PERLAWANAN -->
+        <section id="tab-jadual" class="tab-content hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Jadual & Carta Perlawanan</h2>
+                    <p class="text-xs text-slate-500">Paparan struktur kejohanan penyingkiran.</p>
+                </div>
+            </div>
+
+            <div id="bracketContainer" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto bracket-scroll">
+                <p class="text-center text-slate-400 py-8 text-sm">Sila cipta pertandingan dan jana jadual terlebih dahulu.</p>
+            </div>
+        </section>
+
+        <!-- TAB 5: LIVE SCOREBOARD / WASIT (FULLSCREEN MODAL STYLE IN OVERLAY) -->
+        <section id="tab-scoreboard" class="tab-content hidden">
+            <div class="max-w-md mx-auto bg-slate-900 text-white rounded-3xl p-5 shadow-2xl border border-slate-800 flex flex-col justify-between min-h-[80vh]">
+                
+                <!-- Match Top Bar -->
+                <div>
+                    <div class="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800 pb-3 mb-3">
+                        <span id="sbMatchCode" class="font-bold text-yellow-400">PERLAWANAN #--</span>
+                        <span id="sbStatusBadge" class="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold">Sedang Berlangsung</span>
+                    </div>
+
+                    <!-- Sets History Pills -->
+                    <div class="flex justify-center items-center space-x-2 my-2 text-xs">
+                        <span class="text-slate-400">Keputusan Set:</span>
+                        <div id="sbSetScores" class="flex space-x-1.5 font-mono">
+                            <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-300">0 - 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Score Board Grid -->
+                <div class="grid grid-cols-2 gap-3 my-4">
+                    
+                    <!-- Team A -->
+                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-between text-center relative overflow-hidden">
+                        <div id="sbServerA" class="absolute top-2 left-2 text-yellow-400 hidden">
+                            <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <div class="mt-2">
+                            <div id="sbNameA" class="font-bold text-base leading-tight text-slate-100 truncate">Pemain A</div>
+                            <div id="sbClubA" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab A</div>
+                        </div>
+                        <div id="sbScoreA" class="text-6xl font-black my-4 text-blue-400 font-mono tracking-tighter">00</div>
+                        <button onclick="addPoint('A')" class="w-full bg-blue-600 active:bg-blue-700 hover:bg-blue-500 text-white font-extrabold py-5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
+                            +1
+                        </button>
+                    </div>
+
+                    <!-- Team B -->
+                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-between text-center relative overflow-hidden">
+                        <div id="sbServerB" class="absolute top-2 left-2 text-yellow-400 hidden">
+                            <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <div class="mt-2">
+                            <div id="sbNameB" class="font-bold text-base leading-tight text-slate-100 truncate">Pemain B</div>
+                            <div id="sbClubB" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab B</div>
+                        </div>
+                        <div id="sbScoreB" class="text-6xl font-black my-4 text-rose-400 font-mono tracking-tighter">00</div>
+                        <button onclick="addPoint('B')" class="w-full bg-rose-600 active:bg-rose-700 hover:bg-rose-500 text-white font-extrabold py-5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
+                            +1
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Referee Action Buttons -->
+                <div class="space-y-3 pt-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="undoPoint()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
+                            <i data-lucide="undo-2" class="w-4 h-4 mr-1"></i> Undo Mata Last
+                        </button>
+                        <button onclick="switchSides()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
+                            <i data-lucide="arrow-left-right" class="w-4 h-4 mr-1"></i> Tukar Side
+                        </button>
+                    </div>
+                    <button onclick="switchTab('jadual')" class="w-full bg-slate-800/50 text-slate-400 hover:text-white py-2 rounded-xl text-xs font-medium">
+                        Kembali ke Jadual
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 6: KEPUTUSAN / SEJARAH -->
+        <section id="tab-keputusan" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <i data-lucide="award" class="w-6 h-6 text-yellow-500 mr-2"></i> Keputusan Pertandingan & Pemenang
+                </h2>
+                
+                <!-- Podium Display -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-4 my-6 text-center">
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex flex-col justify-between order-2 sm:order-1">
+                        <div>
+                            <span class="text-2xl">🥈</span>
+                            <div class="text-xs font-bold text-slate-400 uppercase mt-1">Naib Juara</div>
+                            <div id="podium2" class="font-extrabold text-sm text-slate-800 mt-2">--</div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex flex-col justify-between order-1 sm:order-2 transform sm:-translate-y-2">
+                        <div>
+                            <span class="text-3xl">🏆</span>
+                            <div class="text-xs font-bold text-amber-600 uppercase mt-1">Juara</div>
+                            <div id="podium1" class="font-extrabold text-base text-slate-900 mt-2">--</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex flex-col justify-between order-3">
+                        <div>
+                            <span class="text-2xl">🥉</span>
+                            <div class="text-xs font-bold text-slate-400 uppercase mt-1">Tempat Ketiga</div>
+                            <div id="podium3" class="font-extrabold text-sm text-slate-800 mt-2">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History List -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Sejarah Perlawanan Tamat</h3>
+                <div id="historyList" class="space-y-2">
+                    <!-- Dynamic Matches -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: STATISTIK -->
+        <section id="tab-statistik" class="tab-content hidden space-y-4">
+            <h2 class="text-xl font-bold text-slate-800">Statistik Pertandingan</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase">Ringkasan Mata</h3>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-sm text-slate-600">Jumlah Mata Dikumpul</span>
+                        <span id="stTotalPoints" class="font-bold text-blue-600">0</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-sm text-slate-600">Jumlah Set Dimainkan</span>
+                        <span id="stTotalSets" class="font-bold text-blue-600">0</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-sm text-slate-600">Purata Mata per Perlawanan</span>
+                        <span id="stAvgPoints" class="font-bold text-blue-600">0</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase">Status Perlawanan</h3>
+                    <div id="stProgress" class="space-y-2">
+                        <!-- Progress status bar -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 8: TETAPAN -->
+        <section id="tab-tetapan" class="tab-content hidden max-w-lg mx-auto space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-xl font-bold text-slate-800 border-b pb-3">Tetapan Sistem & Data</h2>
+                
+                <div>
+                    <button onclick="resetData()" class="w-full bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold py-3 rounded-xl text-sm transition flex items-center justify-center">
+                        <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Padam Semua Data & Reset
+                    </button>
+                    <p class="text-xs text-slate-400 mt-1.5 text-center">Amaran: Tindakan ini akan memadamkan kejohanan dan peserta dari LocalStorage.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar for Mobile -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 sm:relative sm:border-t-0 sm:bg-transparent">
+        <div class="max-w-md mx-auto flex justify-around items-center px-2 py-1.5 sm:hidden">
+            <button onclick="switchTab('dashboard')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="dashboard">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-0.5">Utama</span>
+            </button>
+            <button onclick="switchTab('peserta')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="peserta">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-0.5">Peserta</span>
+            </button>
+            <button onclick="switchTab('jadual')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="jadual">
+                <i data-lucide="git-pull-request" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-0.5">Jadual</span>
+            </button>
+            <button onclick="switchTab('keputusan')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="keputusan">
+                <i data-lucide="trophy" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-0.5">Keputusan</span>
+            </button>
+            <button onclick="switchTab('statistik')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="statistik">
+                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-0.5">Statistik</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modal Add Participant -->
+    <div id="modalParticipant" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-slate-800">Tambah Peserta Baru</h3>
+                <button onclick="closeAddParticipantModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="formParticipant" onsubmit="saveParticipant(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pemain 1 / Pasukan</label>
+                    <input type="text" id="pName1" required placeholder="Cth: Ahmad Albab" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="doublePlayerContainer">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pemain 2 (Jika Beregu)</label>
+                    <input type="text" id="pName2" placeholder="Cth: Chong Wei" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Sekolah / Kelab</label>
+                    <input type="text" id="pClub" placeholder="Cth: SMK Victoria" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeAddParticipantModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-blue-700">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- APP STATE & LOCALSTORAGE ENGINE ---
+        const STORAGE_KEY = 'BADMINTON_APP_STATE_2026';
+
+        let appState = {
+            tournament: null, // { name, date, venue, organizer, category, format }
+            participants: [], // Array of { id, name1, name2, club }
+            matches: [], // Array of match objects
+            activeMatchId: null, // Current match being refereed
+            historyStack: [] // For point-by-point undo
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStateFromStorage();
+            lucide.createIcons();
+            switchTab('dashboard');
+            updateUI();
+        });
+
+        function saveStateToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            updateUI();
+        }
+
+        function loadStateFromStorage() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (data) {
+                try {
+                    appState = JSON.parse(data);
+                } catch(e) {
+                    console.error("Gagal membaca LocalStorage", e);
+                }
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
+
+        // Navigation Engine
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            // Highlight Mobile Bottom Nav
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.target === tabId) {
+                    btn.classList.add('text-blue-600');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    btn.classList.remove('text-blue-600');
+                    btn.classList.add('text-slate-500');
+                }
+            });
+
+            // Re-render specifics
+            if (tabId === 'peserta') renderParticipants();
+            if (tabId === 'jadual') renderBracket();
+            if (tabId === 'keputusan') renderResults();
+            if (tabId === 'statistik') renderStats();
+        }
+
+        // --- TOURNAMENT CREATION ---
+        function saveTournament(e) {
+            e.preventDefault();
+            appState.tournament = {
+                name: document.getElementById('tName').value,
+                date: document.getElementById('tDate').value,
+                venue: document.getElementById('tVenue').value,
+                organizer: document.getElementById('tOrgan').value,
+                category: document.getElementById('tCat').value,
+                format: document.getElementById('tFormat').value
+            };
+            saveStateToStorage();
+            showToast('Pertandingan berjaya dicipta!');
+            switchTab('peserta');
+        }
+
+        // --- PARTICIPANTS MANAGEMENT ---
+        function openAddParticipantModal() {
+            document.getElementById('modalParticipant').classList.remove('hidden');
+        }
+
+        function closeAddParticipantModal() {
+            document.getElementById('modalParticipant').classList.add('hidden');
+            document.getElementById('formParticipant').reset();
+        }
+
+        function saveParticipant(e) {
+            e.preventDefault();
+            const p1 = document.getElementById('pName1').value.trim();
+            const p2 = document.getElementById('pName2').value.trim();
+            const club = document.getElementById('pClub').value.trim();
+
+            if (!p1) return;
+
+            appState.participants.push({
+                id: 'P_' + Date.now(),
+                name1: p1,
+                name2: p2,
+                club: club || 'Bebas'
+            });
+
+            saveStateToStorage();
+            closeAddParticipantModal();
+            renderParticipants();
+            showToast('Peserta disimpan!');
+        }
+
+        function deleteParticipant(id) {
+            appState.participants = appState.participants.filter(p => p.id !== id);
+            saveStateToStorage();
+            renderParticipants();
+            showToast('Peserta dipadam.');
+        }
+
+        function renderParticipants() {
+            const list = document.getElementById('pesertaList');
+            const search = (document.getElementById('searchPeserta')?.value || '').toLowerCase();
+            list.innerHTML = '';
+
+            const filtered = appState.participants.filter(p => 
+                p.name1.toLowerCase().includes(search) || 
+                (p.name2 && p.name2.toLowerCase().includes(search)) ||
+                p.club.toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 col-span-2 text-center py-6">Tiada peserta ditemui.</p>`;
+                return;
+            }
+
+            filtered.forEach((p, idx) => {
+                const displayName = p.name2 ? `${p.name1} / ${p.name2}` : p.name1;
+                list.innerHTML += `
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 text-xs font-extrabold flex items-center justify-center">${idx + 1}</span>
+                            <div>
+                                <div class="font-bold text-sm text-slate-800">${displayName}</div>
+                                <div class="text-xs text-slate-400">${p.club}</div>
+                            </div>
+                        </div>
+                        <button onclick="deleteParticipant('${p.id}')" class="text-slate-300 hover:text-rose-500 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // --- SINGLE ELIMINATION BRACKET GENERATOR ---
+        function generateSchedule() {
+            if (appState.participants.length < 2) {
+                showToast('Sekurang-kurangnya 2 peserta diperlukan!');
+                return;
+            }
+
+            const players = [...appState.participants];
+            // Shuffle
+            for (let i = players.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [players[i], players[j]] = [players[j], players[i]];
+            }
+
+            // Calculate bracket size (next power of 2: 2, 4, 8, 16, 32...)
+            const count = players.length;
+            let bracketSize = 2;
+            while (bracketSize < count) bracketSize *= 2;
+
+            const rounds = Math.log2(bracketSize); // e.g., 8 -> 3 rounds
+            const matches = [];
+
+            // First Round matches
+            let matchCounter = 1;
+            const round1Matches = bracketSize / 2;
+
+            for (let i = 0; i < round1Matches; i++) {
+                const p1 = players[i * 2] || null;
+                const p2 = players[i * 2 + 1] || null;
+
+                const match = {
+                    id: `M_${matchCounter}`,
+                    code: `PERLAWANAN #${matchCounter}`,
+                    round: 1,
+                    playerA: p1,
+                    playerB: p2,
+                    scoreA: 0,
+                    scoreB: 0,
+                    setsA: 0,
+                    setsB: 0,
+                    setHistory: [], // e.g. [{a:21, b:18}, {a:18, b:21}]
+                    status: (p1 && p2) ? 'Belum Bermula' : (p1 ? 'Tamat' : 'Belum Bermula'),
+                    winner: (p1 && !p2) ? p1 : null, // Bye handling
+                    nextMatchId: `M_${round1Matches + Math.floor(i / 2) + 1}`,
+                    nextSlot: (i % 2 === 0) ? 'A' : 'B'
+                };
+                matches.push(match);
+                matchCounter++;
+            }
+
+            // Subsequent Rounds
+            let currentRoundMatches = round1Matches / 2;
+            let currentRound = 2;
+
+            while (currentRoundMatches >= 1) {
+                for (let i = 0; i < currentRoundMatches; i++) {
+                    const isFinal = currentRoundMatches === 1;
+                    const match = {
+                        id: `M_${matchCounter}`,
+                        code: isFinal ? 'PERLAWANAN AKHIR' : `PERLAWANAN #${matchCounter}`,
+                        round: currentRound,
+                        playerA: null,
+                        playerB: null,
+                        scoreA: 0,
+                        scoreB: 0,
+                        setsA: 0,
+                        setsB: 0,
+                        setHistory: [],
+                        status: 'Belum Bermula',
+                        winner: null,
+                        nextMatchId: isFinal ? null : `M_${matchCounter + currentRoundMatches - Math.floor(i / 2)}`,
+                        nextSlot: (i % 2 === 0) ? 'A' : 'B'
+                    };
+                    matches.push(match);
+                    matchCounter++;
+                }
+                currentRoundMatches /= 2;
+                currentRound++;
+            }
+
+            // Propagate BYEs automatically
+            matches.forEach(m => {
+                if (m.round === 1 && m.winner && m.nextMatchId) {
+                    const nextM = matches.find(nm => nm.id === m.nextMatchId);
+                    if (nextM) {
+                        if (m.nextSlot === 'A') nextM.playerA = m.winner;
+                        else nextM.playerB = m.winner;
+                    }
+                }
+            });
+
+            appState.matches = matches;
+            saveStateToStorage();
+            showToast('Jadual Perlawanan Berjaya Dijanakan!');
+            switchTab('jadual');
+        }
+
+        // --- RENDER BRACKET UI ---
+        function renderBracket() {
+            const container = document.getElementById('bracketContainer');
+            if (!appState.matches || appState.matches.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm">Sila cipta pertandingan dan jana jadual terlebih dahulu.</p>`;
+                return;
+            }
+
+            // Group by rounds
+            const roundsMap = {};
+            appState.matches.forEach(m => {
+                if (!roundsMap[m.round]) roundsMap[m.round] = [];
+                roundsMap[m.round].push(m);
+            });
+
+            let html = `<div class="flex space-x-6 min-w-max p-2">`;
+
+            Object.keys(roundsMap).forEach(roundNum => {
+                const roundMatches = roundsMap[roundNum];
+                let roundTitle = `Pusingan ${roundNum}`;
+                if (roundMatches.length === 1) roundTitle = 'Peringkat Akhir';
+                else if (roundMatches.length === 2) roundTitle = 'Separuh Akhir';
+                else if (roundMatches.length === 4) roundTitle = 'Suku Akhir';
+
+                html += `
+                    <div class="w-64 space-y-4 flex flex-col justify-around">
+                        <div class="font-bold text-xs uppercase tracking-wider text-slate-400 text-center border-b pb-1">${roundTitle}</div>
+                        <div class="space-y-4 flex-grow flex flex-col justify-around">
+                `;
+
+                roundMatches.forEach(m => {
+                    const pA = m.playerA ? (m.playerA.name2 ? `${m.playerA.name1}/${m.playerA.name2}` : m.playerA.name1) : 'Menunggu...';
+                    const pB = m.playerB ? (m.playerB.name2 ? `${m.playerB.name1}/${m.playerB.name2}` : m.playerB.name1) : 'Menunggu...';
+                    
+                    const isLive = m.status === 'Sedang Berlangsung';
+                    const isTamat = m.status === 'Tamat';
+
+                    html += `
+                        <div class="bg-slate-50 rounded-xl border ${isLive ? 'border-amber-400 ring-2 ring-amber-300' : 'border-slate-200'} p-3 shadow-sm hover:shadow transition relative">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 mb-2">
+                                <span>${m.code}</span>
+                                <span class="${isLive ? 'text-amber-600 font-extrabold' : (isTamat ? 'text-emerald-600' : '')}">${m.status}</span>
+                            </div>
+                            
+                            <!-- Player A -->
+                            <div class="flex justify-between items-center p-1.5 rounded ${m.winner?.id === m.playerA?.id && m.playerA ? 'bg-emerald-100 font-bold text-emerald-900' : ''}">
+                                <span class="text-xs truncate max-w-[140px] text-slate-700">${pA}</span>
+                                <span class="text-xs font-mono font-bold">${m.setsA}</span>
+                            </div>
+
+                            <!-- Player B -->
+                            <div class="flex justify-between items-center p-1.5 rounded mt-1 ${m.winner?.id === m.playerB?.id && m.playerB ? 'bg-emerald-100 font-bold text-emerald-900' : ''}">
+                                <span class="text-xs truncate max-w-[140px] text-slate-700">${pB}</span>
+                                <span class="text-xs font-mono font-bold">${m.setsB}</span>
+                            </div>
+
+                            ${(m.playerA && m.playerB && !isTamat) ? `
+                                <button onclick="startRefereeing('${m.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 rounded-lg text-xs shadow transition flex items-center justify-center">
+                                    <i data-lucide="play" class="w-3 h-3 mr-1"></i> ${isLive ? 'Sambung Wasi' : 'Mula Wasi'}
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // --- REFEREE / SCOREBOARD ENGINE ---
+        function startRefereeing(matchId) {
+            const m = appState.matches.find(item => item.id === matchId);
+            if (!m) return;
+
+            appState.activeMatchId = matchId;
+            if (m.status === 'Belum Bermula') {
+                m.status = 'Sedang Berlangsung';
+            }
+            saveStateToStorage();
+            switchTab('scoreboard');
+            renderScoreboard();
+        }
+
+        function renderScoreboard() {
+            const m = appState.matches.find(item => item.id === appState.activeMatchId);
+            if (!m) return;
+
+            document.getElementById('sbMatchCode').innerText = m.code;
+            document.getElementById('sbStatusBadge').innerText = m.status;
+
+            // Names
+            const nameA = m.playerA ? (m.playerA.name2 ? `${m.playerA.name1} / ${m.playerA.name2}` : m.playerA.name1) : 'Player A';
+            const nameB = m.playerB ? (m.playerB.name2 ? `${m.playerB.name1} / ${m.playerB.name2}` : m.playerB.name1) : 'Player B';
+            
+            document.getElementById('sbNameA').innerText = nameA;
+            document.getElementById('sbClubA').innerText = m.playerA?.club || '';
+            document.getElementById('sbNameB').innerText = nameB;
+            document.getElementById('sbClubB').innerText = m.playerB?.club || '';
+
+            // Current Game Scores
+            document.getElementById('sbScoreA').innerText = String(m.scoreA).padStart(2, '0');
+            document.getElementById('sbScoreB').innerText = String(m.scoreB).padStart(2, '0');
+
+            // Completed Sets rendering
+            const setContainer = document.getElementById('sbSetScores');
+            if (m.setHistory.length === 0) {
+                setContainer.innerHTML = `<span class="bg-slate-800 px-2 py-0.5 rounded text-slate-400">Set 1 Sedang Berlangsung</span>`;
+            } else {
+                setContainer.innerHTML = m.setHistory.map((s, idx) => 
+                    `<span class="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-200">Set ${idx+1}: ${s.a}-${s.b}</span>`
+                ).join('');
+            }
+        }
+
+        // BWF Official Scoring Logic (21 points, deuce till 30, best of 3)
+        function addPoint(team) {
+            const m = appState.matches.find(item => item.id === appState.activeMatchId);
+            if (!m || m.status === 'Tamat') return;
+
+            // Save state snapshot for UNDO
+            appState.historyStack.push(JSON.parse(JSON.stringify(m)));
+
+            if (team === 'A') m.scoreA++;
+            if (team === 'B') m.scoreB++;
+
+            checkSetWinner(m);
+            saveStateToStorage();
+            renderScoreboard();
+        }
+
+        function undoPoint() {
+            if (appState.historyStack.length === 0) {
+                showToast('Tiada mata untuk di-undo.');
+                return;
+            }
+            const previousState = appState.historyStack.pop();
+            const matchIndex = appState.matches.findIndex(m => m.id === previousState.id);
+            if (matchIndex !== -1) {
+                appState.matches[matchIndex] = previousState;
+                saveStateToStorage();
+                renderScoreboard();
+                showToast('Mata terakhir dibatalkan.');
+            }
+        }
+
+        function switchSides() {
+            showToast('Sisi gelanggang bertukar!');
+        }
+
+        function checkSetWinner(m) {
+            const a = m.scoreA;
+            const b = m.scoreB;
+
+            // BWF Rule: Win set if >= 21 and lead >= 2 OR reach 30 points
+            let setWonBy = null;
+
+            if ((a >= 21 && a - b >= 2) || a === 30) setWonBy = 'A';
+            else if ((b >= 21 && b - a >= 2) || b === 30) setWonBy = 'B';
+
+            if (setWonBy) {
+                m.setHistory.push({ a: m.scoreA, b: m.scoreB });
+                
+                if (setWonBy === 'A') m.setsA++;
+                if (setWonBy === 'B') m.setsB++;
+
+                // Reset game scores for next set
+                m.scoreA = 0;
+                m.scoreB = 0;
+
+                // Check match winner (Best of 3 sets)
+                if (m.setsA === 2 || m.setsB === 2) {
+                    m.status = 'Tamat';
+                    m.winner = m.setsA === 2 ? m.playerA : m.playerB;
+                    showToast(`Perlawanan Tamat! Pemenang: ${m.winner.name1}`);
+                    
+                    // Automatically advance winner to next round in bracket
+                    advanceWinnerInBracket(m);
+                } else {
+                    showToast(`Set Tamat! Menang Set: ${setWonBy === 'A' ? m.playerA.name1 : m.playerB.name1}`);
+                }
+            }
+        }
+
+        function advanceWinnerInBracket(completedMatch) {
+            if (!completedMatch.nextMatchId || !completedMatch.winner) return;
+
+            const nextM = appState.matches.find(m => m.id === completedMatch.nextMatchId);
+            if (nextM) {
+                if (completedMatch.nextSlot === 'A') nextM.playerA = completedMatch.winner;
+                else nextM.playerB = completedMatch.winner;
+            }
+        }
+
+        // --- DASHBOARD & STATS UPDATE ---
+        function updateUI() {
+            const t = appState.tournament;
+            if (t) {
+                document.getElementById('dashName').innerText = t.name;
+                document.getElementById('dashMeta').innerHTML = `
+                    <span><i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>${t.date}</span>
+                    <span><i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>${t.venue}</span>
+                    <span><i data-lucide="tag" class="w-4 h-4 inline mr-1"></i>${t.category}</span>
+                `;
+                document.getElementById('tournamentBadge').innerText = t.name;
+                document.getElementById('tournamentBadge').classList.remove('hidden');
+            }
+
+            // Stats counts
+            const totalP = appState.participants.length;
+            const pendingM = appState.matches.filter(m => m.status === 'Belum Bermula').length;
+            const liveM = appState.matches.filter(m => m.status === 'Sedang Berlangsung').length;
+            const tamatM = appState.matches.filter(m => m.status === 'Tamat').length;
+
+            document.getElementById('statPeserta').innerText = totalP;
+            document.getElementById('statPending').innerText = pendingM;
+            document.getElementById('statLive').innerText = liveM;
+            document.getElementById('statTamat').innerText = tamatM;
+
+            // Render Active Matches on Dashboard
+            const activeContainer = document.getElementById('dashActiveMatches');
+            const activeList = appState.matches.filter(m => m.status === 'Sedang Berlangsung' || m.status === 'Belum Bermula').slice(0, 3);
+
+            if (activeList.length === 0) {
+                activeContainer.innerHTML = `<p class="text-sm text-slate-400 text-center py-4">Tiada perlawanan aktif.</p>`;
+            } else {
+                activeContainer.innerHTML = activeList.map(m => {
+                    const pA = m.playerA ? m.playerA.name1 : 'TBD';
+                    const pB = m.playerB ? m.playerB.name1 : 'TBD';
+                    return `
+                        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <div>
+                                <div class="text-xs font-bold text-slate-400">${m.code}</div>
+                                <div class="text-sm font-bold text-slate-800">${pA} vs ${pB}</div>
+                            </div>
+                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${m.status === 'Sedang Berlangsung' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}">
+                                ${m.status}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- RESULTS & PODIUM ---
+        function renderResults() {
+            const finalMatch = appState.matches.find(m => m.round === Math.max(...appState.matches.map(x => x.round)));
+            
+            if (finalMatch && finalMatch.status === 'Tamat') {
+                const juara = finalMatch.winner;
+                const naibJuara = (finalMatch.winner.id === finalMatch.playerA?.id) ? finalMatch.playerB : finalMatch.playerA;
+
+                document.getElementById('podium1').innerText = juara ? (juara.name2 ? `${juara.name1}/${juara.name2}` : juara.name1) : '--';
+                document.getElementById('podium2').innerText = naibJuara ? (naibJuara.name2 ? `${naibJuara.name1}/${naibJuara.name2}` : naibJuara.name1) : '--';
+                document.getElementById('podium3').innerText = 'Separuh Akhir';
+            }
+
+            // History List
+            const historyContainer = document.getElementById('historyList');
+            const finishedMatches = appState.matches.filter(m => m.status === 'Tamat');
+
+            if (finishedMatches.length === 0) {
+                historyContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Belum ada perlawanan yang tamat.</p>`;
+                return;
+            }
+
+            historyContainer.innerHTML = finishedMatches.map(m => {
+                const pA = m.playerA ? (m.playerA.name2 ? `${m.playerA.name1}/${m.playerA.name2}` : m.playerA.name1) : 'Pemain A';
+                const pB = m.playerB ? (m.playerB.name2 ? `${m.playerB.name1}/${m.playerB.name2}` : m.playerB.name1) : 'Pemain B';
+                const setsText = m.setHistory.map(s => `${s.a}-${s.b}`).join(', ');
+
+                return `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-slate-400 mr-2">${m.code}</span>
+                            <span class="font-bold text-slate-800">${pA} vs ${pB}</span>
+                            <div class="text-slate-500 mt-0.5">Keputusan Set: ${setsText}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pemenang: ${m.winner?.name1}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- STATISTIK ---
+        function renderStats() {
+            let totalPoints = 0;
+            let totalSets = 0;
+
+            appState.matches.forEach(m => {
+                m.setHistory.forEach(s => {
+                    totalPoints += (s.a + s.b);
+                    totalSets++;
+                });
+            });
+
+            document.getElementById('stTotalPoints').innerText = totalPoints;
+            document.getElementById('stTotalSets').innerText = totalSets;
+            
+            const finishedCount = appState.matches.filter(m => m.status === 'Tamat').length;
+            const avg = finishedCount > 0 ? (totalPoints / finishedCount).toFixed(1) : 0;
+            document.getElementById('stAvgPoints').innerText = avg;
+        }
+
+        // --- RESET DATA ---
+        function resetData() {
+            if (confirm('Adakah anda pasti untuk memadam semua data pertandingan ini? Tindakan ini tidak boleh dibatalkan.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                appState = {
+                    tournament: null,
+                    participants: [],
+                    matches: [],
+                    activeMatchId: null,
+                    historyStack: []
+                };
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
