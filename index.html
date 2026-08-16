@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Pengurusan Pertandingan Badminton</title>
+    <title>Sistem Pengurusan Pertandingan Badminton Multi-Event</title>
     
     <!-- PWA Manifest & Theme -->
     <meta name="theme-color" content="#1e3a8a">
@@ -41,10 +41,15 @@
             </div>
             
             <div class="flex items-center space-x-3">
+                <!-- Global Active Tournament Switcher -->
+                <select id="globalTournamentSelect" onchange="switchActiveTournament(this.value)" class="bg-blue-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-700 outline-none max-w-[140px] sm:max-w-none truncate">
+                    <!-- Dynamic Options -->
+                </select>
+
                 <!-- Role Status Pill -->
                 <button onclick="toggleRoleModal()" id="roleBadge" class="flex items-center space-x-1.5 text-xs bg-blue-800 border border-blue-700 px-3 py-1 rounded-full text-blue-200 font-medium hover:bg-blue-700 transition">
                     <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-300"></i>
-                    <span id="roleBadgeText">Penonton (Lihat Sahaja)</span>
+                    <span id="roleBadgeText">Penonton</span>
                 </button>
             </div>
         </div>
@@ -61,45 +66,42 @@
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-content space-y-6">
-            <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 opacity-10">
-                    <i data-lucide="trophy" class="w-48 h-48"></i>
+            
+            <!-- Tournament List Grid (Multi-Event Overview) -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 flex items-center text-lg">
+                        <i data-lucide="layers" class="w-5 h-5 text-blue-600 mr-2"></i> Senarai Pertandingan / Acara
+                    </h2>
+                    <button onclick="switchTab('pertandingan')" class="admin-only bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs flex items-center transition shadow-sm active:scale-95">
+                        <i data-lucide="plus-circle" class="w-4 h-4 mr-1"></i> Tambah Acara Baru
+                    </button>
                 </div>
-                <div class="relative z-10">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-300">Sistem Pengurusan Pertandingan</span>
-                    <h1 id="dashName" class="text-2xl sm:text-3xl font-extrabold mt-1">Tiada Pertandingan Aktif</h1>
-                    <p id="dashMeta" class="text-sm text-blue-200 mt-2 flex flex-wrap gap-4">
-                        <span><i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>--</span>
-                        <span><i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>--</span>
-                    </p>
-                    <div class="mt-6 flex flex-wrap gap-3">
-                        <button onclick="switchTab('pertandingan')" class="admin-only bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-4 py-2 rounded-xl text-sm flex items-center transition shadow-md active:scale-95">
-                            <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i> Cipta Baru
-                        </button>
-                        <button onclick="switchTab('peserta')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center transition backdrop-blur-sm">
-                            <i data-lucide="users" class="w-4 h-4 mr-1.5"></i> Senarai Peserta
-                        </button>
-                    </div>
+                <div id="tournamentOverviewCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Dynamic Tournament Cards -->
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="text-slate-400 text-xs font-medium uppercase">Jumlah Peserta</div>
-                    <div id="statPeserta" class="text-2xl font-black text-slate-800 mt-1">0</div>
-                </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="text-slate-400 text-xs font-medium uppercase">Belum Bermula</div>
-                    <div id="statPending" class="text-2xl font-black text-slate-600 mt-1">0</div>
-                </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
-                    <div class="text-amber-600 text-xs font-medium uppercase">Berlangsung</div>
-                    <div id="statLive" class="text-2xl font-black text-amber-600 mt-1">0</div>
-                </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-                    <div class="text-emerald-600 text-xs font-medium uppercase">Selesai</div>
-                    <div id="statTamat" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+            <!-- Stats Grid for Current Selected Tournament -->
+            <div class="border-t pt-4">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Statistik Acara Dipilih: <span id="currentEventTitle" class="text-blue-600">--</span></div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-400 text-xs font-medium uppercase">Jumlah Peserta</div>
+                        <div id="statPeserta" class="text-2xl font-black text-slate-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-400 text-xs font-medium uppercase">Belum Bermula</div>
+                        <div id="statPending" class="text-2xl font-black text-slate-600 mt-1">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                        <div class="text-amber-600 text-xs font-medium uppercase">Berlangsung</div>
+                        <div id="statLive" class="text-2xl font-black text-amber-600 mt-1">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                        <div class="text-emerald-600 text-xs font-medium uppercase">Selesai</div>
+                        <div id="statTamat" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+                    </div>
                 </div>
             </div>
 
@@ -109,7 +111,7 @@
                     <h2 class="font-bold text-slate-800 flex items-center">
                         <i data-lucide="play-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Perlawanan Aktif & Terdekat
                     </h2>
-                    <button onclick="switchTab('jadual')" class="text-blue-600 text-xs font-semibold hover:underline">Lihat Semua</button>
+                    <button onclick="switchTab('jadual')" class="text-blue-600 text-xs font-semibold hover:underline">Lihat Semua Jadual</button>
                 </div>
                 <div id="dashActiveMatches" class="space-y-3">
                     <p class="text-sm text-slate-400 text-center py-4">Tiada perlawanan dijanakan lagi.</p>
@@ -121,13 +123,13 @@
         <section id="tab-pertandingan" class="tab-content hidden max-w-xl mx-auto">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
                 <h2 class="text-xl font-bold text-slate-800 flex items-center border-b pb-3">
-                    <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Cipta Pertandingan Baru
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Cipta Acara / Pertandingan Baru
                 </h2>
                 
                 <form id="formPertandingan" onsubmit="saveTournament(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pertandingan</label>
-                        <input type="text" id="tName" required placeholder="Cth: Kejohanan Terbuka Club 2026" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Kejohanan / Acara</label>
+                        <input type="text" id="tName" required placeholder="Cth: Perseorangan Lelaki / Beregu Campuran" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
                     </div>
                     
                     <div class="grid grid-cols-2 gap-3">
@@ -158,16 +160,16 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Format Format Perlawanan</label>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Format Perlawanan</label>
                             <select id="tFormat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
-                                <option value="Hybrid Custom">Awal (1 Set 30) -> Separuh Akhir/Akhir (3 Set 15)</option>
+                                <option value="Hybrid Custom">Awal (1 Set 30) -> Separuh Akhir/Akhir (3 Set 15 Cap 21)</option>
                                 <option value="Standard 21">Standard BWF (3 Set 21 Mata)</option>
                             </select>
                         </div>
                     </div>
 
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center">
-                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan & Mulakan
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Acara Ini
                     </button>
                 </form>
             </div>
@@ -178,7 +180,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">Pengurusan Peserta</h2>
-                    <p class="text-xs text-slate-500">Senarai pemain dan pasukan yang berdaftar.</p>
+                    <p class="text-xs text-slate-500">Senarai pemain untuk acara: <span id="pesertaEventName" class="font-bold text-blue-600">--</span></p>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <button onclick="openAddParticipantModal()" class="admin-only flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center justify-center transition">
@@ -245,9 +247,15 @@
                             <div id="sbNameA" class="font-bold text-base leading-tight text-slate-100 truncate">Pemain A</div>
                             <div id="sbClubA" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab A</div>
                         </div>
-                        <div id="sbScoreA" class="text-6xl font-black my-4 text-blue-400 font-mono tracking-tighter">00</div>
-                        <button onclick="addPoint('A')" class="admin-only w-full bg-blue-600 active:bg-blue-700 hover:bg-blue-500 text-white font-extrabold py-5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
-                            +1
+                        
+                        <!-- Direct Editable Inputs / Large Display -->
+                        <div class="my-3 flex justify-center">
+                            <input type="number" id="inputScoreA" min="0" max="30" onchange="manualUpdateScore('A', this.value)" class="admin-only w-24 text-center text-5xl font-black bg-slate-900 border border-blue-500 rounded-xl text-blue-400 font-mono tracking-tighter focus:outline-none focus:ring-2 focus:ring-blue-400 py-1" />
+                            <div id="viewerScoreA" class="admin-hidden text-6xl font-black text-blue-400 font-mono tracking-tighter">00</div>
+                        </div>
+
+                        <button onclick="addPoint('A')" class="admin-only w-full bg-blue-600 active:bg-blue-700 hover:bg-blue-500 text-white font-extrabold py-3.5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
+                            +1 Mata
                         </button>
                     </div>
 
@@ -257,9 +265,15 @@
                             <div id="sbNameB" class="font-bold text-base leading-tight text-slate-100 truncate">Pemain B</div>
                             <div id="sbClubB" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab B</div>
                         </div>
-                        <div id="sbScoreB" class="text-6xl font-black my-4 text-rose-400 font-mono tracking-tighter">00</div>
-                        <button onclick="addPoint('B')" class="admin-only w-full bg-rose-600 active:bg-rose-700 hover:bg-rose-500 text-white font-extrabold py-5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
-                            +1
+                        
+                        <!-- Direct Editable Inputs / Large Display -->
+                        <div class="my-3 flex justify-center">
+                            <input type="number" id="inputScoreB" min="0" max="30" onchange="manualUpdateScore('B', this.value)" class="admin-only w-24 text-center text-5xl font-black bg-slate-900 border border-rose-500 rounded-xl text-rose-400 font-mono tracking-tighter focus:outline-none focus:ring-2 focus:ring-rose-400 py-1" />
+                            <div id="viewerScoreB" class="admin-hidden text-6xl font-black text-rose-400 font-mono tracking-tighter">00</div>
+                        </div>
+
+                        <button onclick="addPoint('B')" class="admin-only w-full bg-rose-600 active:bg-rose-700 hover:bg-rose-500 text-white font-extrabold py-3.5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
+                            +1 Mata
                         </button>
                     </div>
 
@@ -269,7 +283,7 @@
                 <div class="space-y-3 pt-2">
                     <div class="grid grid-cols-2 gap-2 admin-only">
                         <button onclick="undoPoint()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
-                            <i data-lucide="undo-2" class="w-4 h-4 mr-1"></i> Undo Mata Last
+                            <i data-lucide="undo-2" class="w-4 h-4 mr-1"></i> Undo Last
                         </button>
                         <button onclick="switchSides()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
                             <i data-lucide="arrow-left-right" class="w-4 h-4 mr-1"></i> Tukar Side
@@ -287,7 +301,7 @@
         <section id="tab-keputusan" class="tab-content hidden space-y-6">
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                 <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
-                    <i data-lucide="award" class="w-6 h-6 text-yellow-500 mr-2"></i> Keputusan Pertandingan & Pemenang
+                    <i data-lucide="award" class="w-6 h-6 text-yellow-500 mr-2"></i> Keputusan & Pemenang
                 </h2>
                 
                 <!-- Podium Display -->
@@ -345,11 +359,6 @@
                         <span id="stAvgPoints" class="font-bold text-blue-600">0</span>
                     </div>
                 </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase">Status Perlawanan</h3>
-                    <div id="stProgress" class="space-y-2"></div>
-                </div>
             </div>
         </section>
 
@@ -361,7 +370,7 @@
                 <div>
                     <label class="block text-xs font-bold uppercase text-slate-600 mb-1">PIN Pentadbir (Admin PIN)</label>
                     <div class="flex space-x-2">
-                        <input type="password" id="pinInput" placeholder="Kod PIN (Lalai: 1234)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none">
+                        <input type="password" id="pinInput" placeholder="Kod PIN (Lalai: 2468)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none">
                         <button onclick="changeAdminPin()" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl text-xs hover:bg-blue-700">Tukar PIN</button>
                     </div>
                 </div>
@@ -370,7 +379,7 @@
                     <button onclick="resetData()" class="w-full bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold py-3 rounded-xl text-sm transition flex items-center justify-center">
                         <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Padam Semua Data & Reset
                     </button>
-                    <p class="text-xs text-slate-400 mt-1.5 text-center">Amaran: Tindakan ini akan memadamkan kejohanan dan peserta dari LocalStorage.</p>
+                    <p class="text-xs text-slate-400 mt-1.5 text-center">Amaran: Tindakan ini akan memadamkan semua acara dan peserta dari LocalStorage.</p>
                 </div>
             </div>
         </section>
@@ -417,7 +426,7 @@
                     <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pemain 1 / Pasukan</label>
                     <input type="text" id="pName1" required placeholder="Cth: Ahmad Albab" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div id="doublePlayerContainer">
+                <div>
                     <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pemain 2 (Jika Beregu)</label>
                     <input type="text" id="pName2" placeholder="Cth: Chong Wei" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
@@ -437,8 +446,8 @@
     <div id="modalRole" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-xl text-center">
             <h3 class="font-bold text-slate-800">Log Masuk Pentadbir (Admin)</h3>
-            <p class="text-xs text-slate-500">Masukkan PIN 4-digit untuk menukar ke mod Pentadbir / Wasi.</p>
-            <input type="password" id="loginPin" maxlength="6" placeholder="PIN (Lalai: 1234)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center text-lg tracking-widest outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-xs text-slate-500">Masukkan PIN untuk menukar ke mod Pentadbir / Wasiti.</p>
+            <input type="password" id="loginPin" maxlength="6" placeholder="PIN (Lalai: 2468)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center text-lg tracking-widest outline-none focus:ring-2 focus:ring-blue-500">
             <div class="flex space-x-2">
                 <button onclick="toggleRoleModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Batal</button>
                 <button onclick="loginAsAdmin()" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">Log Masuk</button>
@@ -448,15 +457,13 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        const STORAGE_KEY = 'BADMINTON_APP_STATE_2026_V2';
+        const STORAGE_KEY = 'BADMINTON_MULTI_EVENT_APP_2026';
 
         let appState = {
             isAdmin: false,
-            adminPin: '1234',
-            tournament: null,
-            participants: [],
-            matches: [],
-            activeMatchId: null,
+            adminPin: '2468',
+            activeTournamentId: null,
+            tournaments: [], // Array of tournaments
             historyStack: []
         };
 
@@ -483,6 +490,39 @@
                     console.error("Gagal membaca LocalStorage", e);
                 }
             }
+
+            // Provide default initial tournament if empty
+            if (!appState.tournaments || appState.tournaments.length === 0) {
+                const defaultId = 'T_' + Date.now();
+                appState.tournaments = [{
+                    id: defaultId,
+                    name: 'Kejohanan Badminton (Perseorangan)',
+                    date: '2026-05-15',
+                    venue: 'Dewan Serbaguna',
+                    organizer: 'Kelab Badminton',
+                    category: 'Perseorangan Lelaki',
+                    format: 'Hybrid Custom',
+                    participants: [],
+                    matches: [],
+                    activeMatchId: null
+                }];
+                appState.activeTournamentId = defaultId;
+            } else if (!appState.activeTournamentId) {
+                appState.activeTournamentId = appState.tournaments[0].id;
+            }
+        }
+
+        function getActiveTournament() {
+            return appState.tournaments.find(t => t.id === appState.activeTournamentId) || appState.tournaments[0];
+        }
+
+        function switchActiveTournament(id) {
+            appState.activeTournamentId = id;
+            saveStateToStorage();
+            updateUI();
+            const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-', '');
+            if (activeTab) switchTab(activeTab);
+            showToast('Menukar ke acara: ' + getActiveTournament().name);
         }
 
         function showToast(msg) {
@@ -512,7 +552,7 @@
                 applyRolePermissions();
                 showToast('Log masuk Pentadbir berjaya!');
             } else {
-                alert('PIN Salah! PIN Lalai ialah 1234');
+                alert('PIN Salah! PIN Lalai ialah 2468');
             }
         }
 
@@ -531,13 +571,16 @@
         function applyRolePermissions() {
             const badgeText = document.getElementById('roleBadgeText');
             const adminElements = document.querySelectorAll('.admin-only');
+            const adminHiddenElements = document.querySelectorAll('.admin-hidden');
 
             if (appState.isAdmin) {
                 badgeText.innerText = 'Pentadbir (Admin)';
                 adminElements.forEach(el => el.classList.remove('hidden'));
+                adminHiddenElements.forEach(el => el.classList.add('hidden'));
             } else {
-                badgeText.innerText = 'Penonton (Lihat Sahaja)';
+                badgeText.innerText = 'Penonton';
                 adminElements.forEach(el => el.classList.add('hidden'));
+                adminHiddenElements.forEach(el => el.classList.remove('hidden'));
             }
         }
 
@@ -563,22 +606,46 @@
             if (tabId === 'statistik') renderStats();
         }
 
-        // --- TOURNAMENT CREATION ---
+        // --- TOURNAMENT CREATION (MULTI-EVENT) ---
         function saveTournament(e) {
             e.preventDefault();
             if (!appState.isAdmin) return;
 
-            appState.tournament = {
+            const newId = 'T_' + Date.now();
+            const newTour = {
+                id: newId,
                 name: document.getElementById('tName').value,
                 date: document.getElementById('tDate').value,
                 venue: document.getElementById('tVenue').value,
                 organizer: document.getElementById('tOrgan').value,
                 category: document.getElementById('tCat').value,
-                format: document.getElementById('tFormat').value
+                format: document.getElementById('tFormat').value,
+                participants: [],
+                matches: [],
+                activeMatchId: null
             };
+
+            appState.tournaments.push(newTour);
+            appState.activeTournamentId = newId;
+
             saveStateToStorage();
-            showToast('Pertandingan berjaya dicipta!');
-            switchTab('peserta');
+            showToast('Acara Baru Berjaya Dicipta!');
+            document.getElementById('formPertandingan').reset();
+            switchTab('dashboard');
+        }
+
+        function deleteTournament(id) {
+            if (!appState.isAdmin) return;
+            if (appState.tournaments.length <= 1) {
+                alert('Sekurang-kurangnya satu acara mesti wujud dalam sistem.');
+                return;
+            }
+            if (confirm('Padam acara ini? Semua data peserta & jadual acara ini akan dipadam.')) {
+                appState.tournaments = appState.tournaments.filter(t => t.id !== id);
+                appState.activeTournamentId = appState.tournaments[0].id;
+                saveStateToStorage();
+                showToast('Acara dipadam.');
+            }
         }
 
         // --- PARTICIPANTS MANAGEMENT ---
@@ -596,13 +663,14 @@
             e.preventDefault();
             if (!appState.isAdmin) return;
 
+            const current = getActiveTournament();
             const p1 = document.getElementById('pName1').value.trim();
             const p2 = document.getElementById('pName2').value.trim();
             const club = document.getElementById('pClub').value.trim();
 
             if (!p1) return;
 
-            appState.participants.push({
+            current.participants.push({
                 id: 'P_' + Date.now(),
                 name1: p1,
                 name2: p2,
@@ -617,25 +685,29 @@
 
         function deleteParticipant(id) {
             if (!appState.isAdmin) return;
-            appState.participants = appState.participants.filter(p => p.id !== id);
+            const current = getActiveTournament();
+            current.participants = current.participants.filter(p => p.id !== id);
             saveStateToStorage();
             renderParticipants();
             showToast('Peserta dipadam.');
         }
 
         function renderParticipants() {
+            const current = getActiveTournament();
+            document.getElementById('pesertaEventName').innerText = current.name;
+
             const list = document.getElementById('pesertaList');
             const search = (document.getElementById('searchPeserta')?.value || '').toLowerCase();
             list.innerHTML = '';
 
-            const filtered = appState.participants.filter(p => 
+            const filtered = current.participants.filter(p => 
                 p.name1.toLowerCase().includes(search) || 
                 (p.name2 && p.name2.toLowerCase().includes(search)) ||
                 p.club.toLowerCase().includes(search)
             );
 
             if (filtered.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-400 col-span-2 text-center py-6">Tiada peserta ditemui.</p>`;
+                list.innerHTML = `<p class="text-xs text-slate-400 col-span-2 text-center py-6">Tiada peserta ditemui untuk acara ini.</p>`;
                 return;
             }
 
@@ -664,12 +736,14 @@
         // --- SINGLE ELIMINATION BRACKET GENERATOR ---
         function generateSchedule() {
             if (!appState.isAdmin) return;
-            if (appState.participants.length < 2) {
+            const current = getActiveTournament();
+
+            if (current.participants.length < 2) {
                 showToast('Sekurang-kurangnya 2 peserta diperlukan!');
                 return;
             }
 
-            const players = [...appState.participants];
+            const players = [...current.participants];
             for (let i = players.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [players[i], players[j]] = [players[j], players[i]];
@@ -752,7 +826,7 @@
                 }
             });
 
-            appState.matches = matches;
+            current.matches = matches;
             saveStateToStorage();
             showToast('Jadual Perlawanan Berjaya Dijanakan!');
             switchTab('jadual');
@@ -760,14 +834,16 @@
 
         // --- RENDER BRACKET UI ---
         function renderBracket() {
+            const current = getActiveTournament();
             const container = document.getElementById('bracketContainer');
-            if (!appState.matches || appState.matches.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm">Sila cipta pertandingan dan jana jadual terlebih dahulu.</p>`;
+
+            if (!current.matches || current.matches.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm">Sila cipta acara dan jana jadual terlebih dahulu.</p>`;
                 return;
             }
 
             const roundsMap = {};
-            appState.matches.forEach(m => {
+            current.matches.forEach(m => {
                 if (!roundsMap[m.round]) roundsMap[m.round] = [];
                 roundsMap[m.round].push(m);
             });
@@ -777,8 +853,8 @@
             Object.keys(roundsMap).forEach(roundNum => {
                 const roundMatches = roundsMap[roundNum];
                 let roundTitle = `Pusingan ${roundNum}`;
-                if (roundMatches.length === 1) roundTitle = 'Peringkat Akhir (3 Set 15 Mata)';
-                else if (roundMatches.length === 2) roundTitle = 'Separuh Akhir (3 Set 15 Mata)';
+                if (roundMatches.length === 1) roundTitle = 'Peringkat Akhir (3 Set 15 Cap 21)';
+                else if (roundMatches.length === 2) roundTitle = 'Separuh Akhir (3 Set 15 Cap 21)';
                 else if (roundMatches.length === 4) roundTitle = 'Suku Akhir (1 Set 30 Mata)';
                 else roundTitle += ` (1 Set 30 Mata)`;
 
@@ -814,7 +890,7 @@
 
                             ${(m.playerA && m.playerB && !isTamat) ? `
                                 <button onclick="startRefereeing('${m.id}')" class="w-full mt-2 ${appState.isAdmin ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-700 hover:bg-slate-800'} text-white font-bold py-1.5 rounded-lg text-xs shadow transition flex items-center justify-center">
-                                    <i data-lucide="${appState.isAdmin ? 'play' : 'eye'}" class="w-3 h-3 mr-1"></i> ${appState.isAdmin ? (isLive ? 'Sambung Wasi' : 'Mula Wasi') : 'Lihat Skor Live'}
+                                    <i data-lucide="${appState.isAdmin ? 'play' : 'eye'}" class="w-3 h-3 mr-1"></i> ${appState.isAdmin ? (isLive ? 'Sambung Wasiti' : 'Mula Wasiti') : 'Lihat Skor Live'}
                                 </button>
                             ` : ''}
                         </div>
@@ -829,12 +905,13 @@
             lucide.createIcons();
         }
 
-        // --- SCOREBOARD ENGINE WITH DYNAMIC RULES ---
+        // --- SCOREBOARD ENGINE WITH DYNAMIC RULES (15 PTS CAP 21 FOR SEMI/FINAL) ---
         function startRefereeing(matchId) {
-            const m = appState.matches.find(item => item.id === matchId);
+            const current = getActiveTournament();
+            const m = current.matches.find(item => item.id === matchId);
             if (!m) return;
 
-            appState.activeMatchId = matchId;
+            current.activeMatchId = matchId;
             if (m.status === 'Belum Bermula' && appState.isAdmin) {
                 m.status = 'Sedang Berlangsung';
             }
@@ -843,26 +920,27 @@
             renderScoreboard();
         }
 
-        // Determine Match Format Rule (Early vs Semi/Final)
+        // Dynamic Rule Logic: Semi/Final = 15 Points (Deuce cap 21)
         function getMatchRule(m) {
-            const isSemiOrFinal = (m.round >= m.totalRounds - 1); // Last 2 rounds
-            if (appState.tournament?.format === 'Standard 21') {
+            const isSemiOrFinal = (m.round >= m.totalRounds - 1);
+            if (getActiveTournament()?.format === 'Standard 21') {
                 return { mode: 'SETS', targetPoints: 21, capPoints: 30, setsToWin: 2, label: '3 Set 21 Mata' };
             }
             if (isSemiOrFinal) {
-                return { mode: 'SETS', targetPoints: 15, capPoints: 17, setsToWin: 2, label: 'Separuh Akhir / Akhir: 3 Set 15 Mata' };
+                return { mode: 'SETS', targetPoints: 15, capPoints: 21, setsToWin: 2, label: 'Separuh Akhir / Akhir: 3 Set 15 Mata (Cap 21)' };
             } else {
                 return { mode: 'SINGLE_SET', targetPoints: 30, capPoints: 30, setsToWin: 1, label: 'Peringkat Awal: 1 Set 30 Mata' };
             }
         }
 
         function renderScoreboard() {
-            const m = appState.matches.find(item => item.id === appState.activeMatchId);
+            const current = getActiveTournament();
+            const m = current.matches.find(item => item.id === current.activeMatchId);
             if (!m) return;
 
             const rule = getMatchRule(m);
 
-            document.getElementById('sbMatchCode').innerText = m.code;
+            document.getElementById('sbMatchCode').innerText = `${current.name} - ${m.code}`;
             document.getElementById('sbRuleBadge').innerText = rule.label;
 
             const nameA = m.playerA ? (m.playerA.name2 ? `${m.playerA.name1} / ${m.playerA.name2}` : m.playerA.name1) : 'Pemain A';
@@ -873,8 +951,11 @@
             document.getElementById('sbNameB').innerText = nameB;
             document.getElementById('sbClubB').innerText = m.playerB?.club || '';
 
-            document.getElementById('sbScoreA').innerText = String(m.scoreA).padStart(2, '0');
-            document.getElementById('sbScoreB').innerText = String(m.scoreB).padStart(2, '0');
+            // Update Input Score Values & Viewer Text
+            document.getElementById('inputScoreA').value = m.scoreA;
+            document.getElementById('inputScoreB').value = m.scoreB;
+            document.getElementById('viewerScoreA').innerText = String(m.scoreA).padStart(2, '0');
+            document.getElementById('viewerScoreB').innerText = String(m.scoreB).padStart(2, '0');
 
             const setContainer = document.getElementById('sbSetScores');
             if (m.setHistory.length === 0) {
@@ -888,10 +969,28 @@
             applyRolePermissions();
         }
 
+        // Direct Input Score Handler
+        function manualUpdateScore(team, value) {
+            if (!appState.isAdmin) return;
+            const current = getActiveTournament();
+            const m = current.matches.find(item => item.id === current.activeMatchId);
+            if (!m || m.status === 'Tamat') return;
+
+            const val = parseInt(value, 10) || 0;
+            appState.historyStack.push(JSON.parse(JSON.stringify(m)));
+
+            if (team === 'A') m.scoreA = val;
+            if (team === 'B') m.scoreB = val;
+
+            checkSetWinner(m);
+            saveStateToStorage();
+            renderScoreboard();
+        }
+
         function addPoint(team) {
             if (!appState.isAdmin) return;
-
-            const m = appState.matches.find(item => item.id === appState.activeMatchId);
+            const current = getActiveTournament();
+            const m = current.matches.find(item => item.id === current.activeMatchId);
             if (!m || m.status === 'Tamat') return;
 
             appState.historyStack.push(JSON.parse(JSON.stringify(m)));
@@ -911,9 +1010,10 @@
                 return;
             }
             const previousState = appState.historyStack.pop();
-            const matchIndex = appState.matches.findIndex(m => m.id === previousState.id);
+            const current = getActiveTournament();
+            const matchIndex = current.matches.findIndex(m => m.id === previousState.id);
             if (matchIndex !== -1) {
-                appState.matches[matchIndex] = previousState;
+                current.matches[matchIndex] = previousState;
                 saveStateToStorage();
                 renderScoreboard();
                 showToast('Mata terakhir dibatalkan.');
@@ -931,13 +1031,11 @@
 
             let setWonBy = null;
 
-            // Checking points according to active match rule (15 vs 30)
             if (rule.mode === 'SINGLE_SET') {
-                // 30 points single game
                 if (a >= rule.targetPoints) setWonBy = 'A';
                 else if (b >= rule.targetPoints) setWonBy = 'B';
             } else {
-                // 15 points sets (Deuce rule up to 17)
+                // 15 Points Sets with Deuce rules (Max 21 Cap)
                 if ((a >= rule.targetPoints && a - b >= 2) || a === rule.capPoints) setWonBy = 'A';
                 else if ((b >= rule.targetPoints && b - a >= 2) || b === rule.capPoints) setWonBy = 'B';
             }
@@ -965,37 +1063,68 @@
         function advanceWinnerInBracket(completedMatch) {
             if (!completedMatch.nextMatchId || !completedMatch.winner) return;
 
-            const nextM = appState.matches.find(m => m.id === completedMatch.nextMatchId);
+            const current = getActiveTournament();
+            const nextM = current.matches.find(m => m.id === completedMatch.nextMatchId);
             if (nextM) {
                 if (completedMatch.nextSlot === 'A') nextM.playerA = completedMatch.winner;
                 else nextM.playerB = completedMatch.winner;
             }
         }
 
-        // --- DASHBOARD & STATS UPDATE ---
+        // --- MULTI-EVENT DASHBOARD & GLOBAL SELECTOR UPDATE ---
         function updateUI() {
-            const t = appState.tournament;
-            if (t) {
-                document.getElementById('dashName').innerText = t.name;
-                document.getElementById('dashMeta').innerHTML = `
-                    <span><i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>${t.date}</span>
-                    <span><i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>${t.venue}</span>
-                    <span><i data-lucide="tag" class="w-4 h-4 inline mr-1"></i>${t.category}</span>
-                `;
-            }
+            // Update Global Tournament Switcher Dropdown
+            const globalSelect = document.getElementById('globalTournamentSelect');
+            globalSelect.innerHTML = appState.tournaments.map(t => 
+                `<option value="${t.id}" ${t.id === appState.activeTournamentId ? 'selected' : ''}>${t.name}</option>`
+            ).join('');
 
-            const totalP = appState.participants.length;
-            const pendingM = appState.matches.filter(m => m.status === 'Belum Bermula').length;
-            const liveM = appState.matches.filter(m => m.status === 'Sedang Berlangsung').length;
-            const tamatM = appState.matches.filter(m => m.status === 'Tamat').length;
+            // Update Multi-Tournament Overview Cards on Dashboard
+            const overviewContainer = document.getElementById('tournamentOverviewCards');
+            overviewContainer.innerHTML = appState.tournaments.map(t => {
+                const isActive = t.id === appState.activeTournamentId;
+                const totalP = t.participants.length;
+                const liveCount = t.matches.filter(m => m.status === 'Sedang Berlangsung').length;
+
+                return `
+                    <div onclick="switchActiveTournament('${t.id}')" class="cursor-pointer bg-white p-4 rounded-2xl border ${isActive ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200'} shadow-sm hover:shadow transition relative">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${t.category}</span>
+                                <h3 class="font-extrabold text-slate-800 text-base mt-1">${t.name}</h3>
+                                <p class="text-xs text-slate-400 mt-1">${t.date} | ${t.venue}</p>
+                            </div>
+                            ${appState.isAdmin && appState.tournaments.length > 1 ? `
+                                <button onclick="event.stopPropagation(); deleteTournament('${t.id}')" class="text-slate-300 hover:text-rose-500 p-1">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="mt-4 flex justify-between items-center text-xs font-semibold border-t pt-2 text-slate-600">
+                            <span>Peserta: <b>${totalP}</b></span>
+                            <span class="${liveCount > 0 ? 'text-amber-600 font-bold' : 'text-slate-400'}">${liveCount > 0 ? `Live (${liveCount})` : 'Tiada Live'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Current Event Active Stats
+            const current = getActiveTournament();
+            document.getElementById('currentEventTitle').innerText = current.name;
+
+            const totalP = current.participants.length;
+            const pendingM = current.matches.filter(m => m.status === 'Belum Bermula').length;
+            const liveM = current.matches.filter(m => m.status === 'Sedang Berlangsung').length;
+            const tamatM = current.matches.filter(m => m.status === 'Tamat').length;
 
             document.getElementById('statPeserta').innerText = totalP;
             document.getElementById('statPending').innerText = pendingM;
             document.getElementById('statLive').innerText = liveM;
             document.getElementById('statTamat').innerText = tamatM;
 
+            // Dashboard Active Matches for current event
             const activeContainer = document.getElementById('dashActiveMatches');
-            const activeList = appState.matches.filter(m => m.status === 'Sedang Berlangsung' || m.status === 'Belum Bermula').slice(0, 3);
+            const activeList = current.matches.filter(m => m.status === 'Sedang Berlangsung' || m.status === 'Belum Bermula').slice(0, 3);
 
             if (activeList.length === 0) {
                 activeContainer.innerHTML = `<p class="text-sm text-slate-400 text-center py-4">Tiada perlawanan aktif.</p>`;
@@ -1022,9 +1151,10 @@
 
         // --- RESULTS & PODIUM ---
         function renderResults() {
-            if (!appState.matches || appState.matches.length === 0) return;
-            const maxRound = Math.max(...appState.matches.map(x => x.round));
-            const finalMatch = appState.matches.find(m => m.round === maxRound);
+            const current = getActiveTournament();
+            if (!current.matches || current.matches.length === 0) return;
+            const maxRound = Math.max(...current.matches.map(x => x.round));
+            const finalMatch = current.matches.find(m => m.round === maxRound);
             
             if (finalMatch && finalMatch.status === 'Tamat') {
                 const juara = finalMatch.winner;
@@ -1036,7 +1166,7 @@
             }
 
             const historyContainer = document.getElementById('historyList');
-            const finishedMatches = appState.matches.filter(m => m.status === 'Tamat');
+            const finishedMatches = current.matches.filter(m => m.status === 'Tamat');
 
             if (finishedMatches.length === 0) {
                 historyContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Belum ada perlawanan yang tamat.</p>`;
@@ -1065,10 +1195,11 @@
 
         // --- STATISTIK ---
         function renderStats() {
+            const current = getActiveTournament();
             let totalPoints = 0;
             let totalSets = 0;
 
-            appState.matches.forEach(m => {
+            current.matches.forEach(m => {
                 m.setHistory.forEach(s => {
                     totalPoints += (s.a + s.b);
                     totalSets++;
@@ -1078,7 +1209,7 @@
             document.getElementById('stTotalPoints').innerText = totalPoints;
             document.getElementById('stTotalSets').innerText = totalSets;
             
-            const finishedCount = appState.matches.filter(m => m.status === 'Tamat').length;
+            const finishedCount = current.matches.filter(m => m.status === 'Tamat').length;
             const avg = finishedCount > 0 ? (totalPoints / finishedCount).toFixed(1) : 0;
             document.getElementById('stAvgPoints').innerText = avg;
         }
@@ -1086,7 +1217,7 @@
         // --- RESET DATA ---
         function resetData() {
             if (!appState.isAdmin) return;
-            if (confirm('Adakah anda pasti untuk memadam semua data pertandingan ini?')) {
+            if (confirm('Adakah anda pasti untuk memadam semua acara dan data pertandingan ini?')) {
                 localStorage.removeItem(STORAGE_KEY);
                 location.reload();
             }
