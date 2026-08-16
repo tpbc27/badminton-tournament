@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>羽毛球淘汰赛生成与纪录系统</title>
+    <style>
+        :root {
+            --bg-color: #121826;
+            --card-bg: #1e293b;
+            --accent-color: #10b981;
+            --accent-hover: #059669;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: #334155;
+            --win-color: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2, h3 { text-align: center; margin-bottom: 10px; }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .setup-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+
+        button {
+            flex: 1;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: var(--accent-hover); }
+        button.reset-btn { background: #ef4444; }
+        button.reset-btn:hover { background: #dc2626; }
+
+        /* 对阵图布局 */
+        .bracket-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 0;
+            gap: 40px;
+            justify-content: flex-start;
+        }
+
+        .round-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            min-width: 240px;
+        }
+
+        .round-title {
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .match-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin: 15px 0;
+            padding: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .match-card:hover { border-color: var(--accent-color); }
+
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin: 2px 0;
+            background: #0f172a;
+        }
+
+        .player-row.winner {
+            background: #064e3b;
+            color: #34d399;
+            font-weight: bold;
+        }
+
+        .score-badge {
+            background: var(--border-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 弹窗模式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            width: 320px;
+            text-align: center;
+        }
+[16/8/2026 下午 11:04] WH: .modal-content input {
+            width: 60px;
+            padding: 8px;
+            text-align: center;
+            margin: 10px;
+            font-size: 18px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 6px;
+        }
+
+        .champion-box {
+            text-align: center;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏸 羽毛球淘汰赛管理系统</h1>
+
+    <div id="champion-display" class="champion-box">
+        <h2>🏆 比赛总冠军 🏆</h2>
+        <h1 id="champion-name" style="margin:0; font-size: 36px;">-</h1>
+    </div>
+
+    <div class="setup-card" id="setup-panel">
+        <h3>创建新比赛</h3>
+        <p style="color: var(--text
