@@ -2,473 +2,412 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Pengurusan Pertandingan Badminton Multi-Event</title>
-    
-    <meta name="theme-color" content="#1e3a8a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Sistem%20Badminton%22%2C%22short_name%22%3A%22Badminton%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%231e3a8a%22%7D">
-
-    <!-- Tailwind CSS (CDN) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pengurusan Kejohanan Badminton</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
+    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Firebase SDK (Realtime Sync) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        .touch-action-manipulation {
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .bracket-scroll::-webkit-scrollbar {
-            height: 6px;
-        }
-        .bracket-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-blue-200">
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <!-- Header / Navigation Bar -->
+    <!-- Top Navigation Bar -->
     <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            
-            <!-- Logo & Desktop Menu -->
-            <div class="flex items-center space-x-6">
-                <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('dashboard')">
-                    <i data-lucide="trophy" class="w-6 h-6 text-yellow-400"></i>
-                    <span class="font-bold text-lg tracking-wide">BadmintonMatch</span>
-                </div>
-
-                <!-- Desktop Navigation Bar -->
-                <nav class="hidden md:flex space-x-1 border-l border-blue-800 pl-4">
-                    <button onclick="switchTab('dashboard')" class="nav-btn-desk px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-100 hover:bg-blue-800 transition flex items-center space-x-1" data-target="dashboard">
-                        <i data-lucide="layout-dashboard" class="w-4 h-4 mr-1"></i> Utama
-                    </button>
-                    <button onclick="switchTab('peserta')" class="nav-btn-desk px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-100 hover:bg-blue-800 transition flex items-center space-x-1" data-target="peserta">
-                        <i data-lucide="users" class="w-4 h-4 mr-1"></i> Peserta
-                    </button>
-                    <button onclick="switchTab('jadual')" class="nav-btn-desk px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-100 hover:bg-blue-800 transition flex items-center space-x-1" data-target="jadual">
-                        <i data-lucide="git-pull-request" class="w-4 h-4 mr-1"></i> Jadual
-                    </button>
-                    <button onclick="switchTab('keputusan')" class="nav-btn-desk px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-100 hover:bg-blue-800 transition flex items-center space-x-1" data-target="keputusan">
-                        <i data-lucide="trophy" class="w-4 h-4 mr-1"></i> Keputusan
-                    </button>
-                    <button onclick="switchTab('statistik')" class="nav-btn-desk px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-100 hover:bg-blue-800 transition flex items-center space-x-1" data-target="statistik">
-                        <i data-lucide="bar-chart-2" class="w-4 h-4 mr-1"></i> Statistik
-                    </button>
-                </nav>
-            </div>
-            
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <!-- Global Active Tournament Switcher -->
-                <select id="globalTournamentSelect" onchange="switchActiveTournament(this.value)" class="bg-blue-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-700 outline-none max-w-[140px] sm:max-w-none truncate">
-                    <!-- Dynamic Options -->
+                <div class="bg-blue-600 p-2 rounded-xl">
+                    <i data-lucide="trophy" class="w-6 h-6 text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base md:text-lg leading-tight">Badminton Master</h1>
+                    <p class="text-[10px] md:text-xs text-blue-200" id="currentEventTitle">Kejohanan Badminton</p>
+                </div>
+            </div>
+
+            <!-- Global Selector & Role Toggle -->
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <select id="globalTournamentSelect" onchange="switchActiveTournament(this.value)" class="bg-blue-800 text-white text-xs md:text-sm font-semibold rounded-lg px-2.5 py-1.5 border border-blue-700 outline-none focus:ring-2 focus:ring-blue-400">
                 </select>
 
-                <!-- Role Status Pill -->
-                <button onclick="toggleRoleModal()" id="roleBadge" class="flex items-center space-x-1.5 text-xs bg-blue-800 border border-blue-700 px-3 py-1 rounded-full text-blue-200 font-medium hover:bg-blue-700 transition">
-                    <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-300"></i>
+                <button onclick="toggleRoleModal()" class="flex items-center space-x-1.5 bg-blue-800 hover:bg-blue-700 border border-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                    <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-300"></i>
                     <span id="roleBadgeText">Penonton</span>
                 </button>
             </div>
         </div>
+
+        <!-- Desktop Navigation Tabs -->
+        <nav class="hidden md:flex max-w-7xl mx-auto px-4 space-x-2 border-t border-blue-800/60 pt-1 pb-1">
+            <button onclick="switchTab('dashboard')" data-target="dashboard" class="nav-btn-desk px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-blue-100 hover:bg-blue-800">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>Utama</span>
+            </button>
+            <button onclick="switchTab('peserta')" data-target="peserta" class="nav-btn-desk px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-blue-100 hover:bg-blue-800">
+                <i data-lucide="users" class="w-4 h-4"></i><span>Peserta</span>
+            </button>
+            <button onclick="switchTab('jadual')" data-target="jadual" class="nav-btn-desk px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-blue-100 hover:bg-blue-800">
+                <i data-lucide="git-fork" class="w-4 h-4"></i><span>Jadual & Carta</span>
+            </button>
+            <button onclick="switchTab('scoreboard')" data-target="scoreboard" class="nav-btn-desk px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-blue-100 hover:bg-blue-800">
+                <i data-lucide="activity" class="w-4 h-4"></i><span>Papan Skor (Live)</span>
+            </button>
+            <button onclick="switchTab('keputusan')" data-target="keputusan" class="nav-btn-desk px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-blue-100 hover:bg-blue-800">
+                <i data-lucide="award" class="w-4 h-4"></i><span>Keputusan</span>
+            </button>
+            <button onclick="switchTab('statistik')" data-target="statistik" class="nav-btn-desk px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-blue-100 hover:bg-blue-800">
+                <i data-lucide="bar-chart-2" class="w-4 h-4"></i><span>Statistik</span>
+            </button>
+        </nav>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-grow max-w-6xl w-full mx-auto p-4 pb-24 sm:pb-8">
-        
-        <!-- ALERT TOAST -->
-        <div id="toast" class="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 hidden bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl text-sm font-medium flex items-center space-x-2 transition-all duration-300">
-            <i data-lucide="info" class="w-4 h-4 text-blue-400"></i>
-            <span id="toastMsg">Pesanan di sini</span>
-        </div>
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 pb-20 md:pb-8">
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-content space-y-6">
-            
-            <!-- Tournament List Grid (Multi-Event Overview) -->
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="font-bold text-slate-800 flex items-center text-lg">
-                        <i data-lucide="layers" class="w-5 h-5 text-blue-600 mr-2"></i> Senarai Pertandingan / Acara
-                    </h2>
-                    <div class="flex space-x-2">
-                        <button onclick="switchTab('peserta')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs flex items-center transition shadow-sm active:scale-95">
-                            <i data-lucide="user-plus" class="w-4 h-4 mr-1"></i> Urus Peserta
-                        </button>
-                        <button onclick="switchTab('pertandingan')" class="admin-only bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs flex items-center transition shadow-sm active:scale-95">
-                            <i data-lucide="plus-circle" class="w-4 h-4 mr-1"></i> Tambah Acara Baru
-                        </button>
-                    </div>
-                </div>
-                <div id="tournamentOverviewCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Dynamic Tournament Cards -->
-                </div>
-            </div>
-
-            <!-- Stats Grid for Current Selected Tournament -->
-            <div class="border-t pt-4">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Statistik Acara Dipilih: <span id="currentEventTitle" class="text-blue-600">--</span></div>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-blue-400 transition" onclick="switchTab('peserta')">
-                        <div class="text-slate-400 text-xs font-medium uppercase">Jumlah Peserta</div>
-                        <div id="statPeserta" class="text-2xl font-black text-slate-800 mt-1">0</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-400 text-xs font-medium uppercase">Belum Bermula</div>
-                        <div id="statPending" class="text-2xl font-black text-slate-600 mt-1">0</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
-                        <div class="text-amber-600 text-xs font-medium uppercase">Berlangsung</div>
-                        <div id="statLive" class="text-2xl font-black text-amber-600 mt-1">0</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-                        <div class="text-emerald-600 text-xs font-medium uppercase">Selesai</div>
-                        <div id="statTamat" class="text-2xl font-black text-emerald-600 mt-1">0</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Action Matches -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-slate-800 flex items-center">
-                        <i data-lucide="play-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Perlawanan Aktif & Terdekat
-                    </h2>
-                    <button onclick="switchTab('jadual')" class="text-blue-600 text-xs font-semibold hover:underline">Lihat Semua Jadual</button>
-                </div>
-                <div id="dashActiveMatches" class="space-y-3">
-                    <p class="text-sm text-slate-400 text-center py-4">Tiada perlawanan dijanakan lagi.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB 2: CIPTA PERTANDINGAN (ADMIN ONLY) -->
-        <section id="tab-pertandingan" class="tab-content hidden max-w-xl mx-auto">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-                <h2 class="text-xl font-bold text-slate-800 flex items-center border-b pb-3">
-                    <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Cipta Acara / Pertandingan Baru
-                </h2>
-                
-                <form id="formPertandingan" onsubmit="saveTournament(event)" class="space-y-4">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Kejohanan / Acara</label>
-                        <input type="text" id="tName" required placeholder="Cth: Perseorangan Lelaki / Beregu Campuran" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Peserta</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1" id="statPeserta">0</h3>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tarikh</label>
-                            <input type="date" id="tDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Penganjur</label>
-                            <input type="text" id="tOrgan" placeholder="Cth: Kelab Badminton Belia" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
-                        </div>
-                    </div>
-
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="users" class="w-5 h-5"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tempat / Lokasi</label>
-                        <input type="text" id="tVenue" placeholder="Cth: Dewan Serbaguna Kluang" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        <p class="text-xs text-slate-400 font-bold uppercase">Belum Mula</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1" id="statPending">0</h3>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Kategori</label>
-                            <select id="tCat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
-                                <option value="Perseorangan Lelaki">Perseorangan Lelaki</option>
-                                <option value="Perseorangan Perempuan">Perseorangan Perempuan</option>
-                                <option value="Beregu Lelaki">Beregu Lelaki</option>
-                                <option value="Beregu Perempuan">Beregu Perempuan</option>
-                                <option value="Beregu Campuran">Beregu Campuran</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Format Perlawanan</label>
-                            <select id="tFormat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
-                                <option value="Hybrid Custom">Awal (1 Set 30) -> Separuh Akhir/Akhir (3 Set 15 Cap 21)</option>
-                                <option value="Standard 21">Standard BWF (3 Set 21 Mata)</option>
-                            </select>
-                        </div>
+                    <div class="p-3 bg-slate-100 text-slate-600 rounded-xl"><i data-lucide="clock" class="w-5 h-5"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Sedang Live</p>
+                        <h3 class="text-2xl font-extrabold text-amber-600 mt-1" id="statLive">0</h3>
                     </div>
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="play-circle" class="w-5 h-5"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Perlawanan Tamat</p>
+                        <h3 class="text-2xl font-extrabold text-emerald-600 mt-1" id="statTamat">0</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                </div>
+            </div>
 
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center">
-                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Acara Ini
+            <!-- Multi-Event Overview -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="font-extrabold text-base text-slate-800 flex items-center">
+                        <i data-lucide="layers" class="w-4 h-4 mr-2 text-blue-600"></i>Senarai Acara & Kategori
+                    </h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="tournamentOverviewCards"></div>
+            </div>
+
+            <!-- Quick Live Matches Banner -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="font-extrabold text-sm text-slate-800 mb-3 flex items-center">
+                    <i data-lucide="activity" class="w-4 h-4 mr-2 text-rose-500 animate-pulse"></i>Perlawanan Semasa
+                </h3>
+                <div id="dashActiveMatches" class="space-y-2"></div>
+            </div>
+
+            <!-- Admin Create Tournament Form -->
+            <div class="admin-only bg-slate-900 text-white p-5 rounded-2xl shadow-md space-y-4">
+                <h3 class="font-extrabold text-sm text-amber-400 flex items-center">
+                    <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>Cipta Acara / Pertandingan Baru (Pentadbir)
+                </h3>
+                <form id="formPertandingan" onsubmit="saveTournament(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input type="text" id="tName" placeholder="Nama Acara (cth: Perseorangan Lelaki)" required class="bg-slate-800 border border-slate-700 text-xs rounded-xl p-2.5 text-white outline-none focus:border-blue-500">
+                    <input type="date" id="tDate" required class="bg-slate-800 border border-slate-700 text-xs rounded-xl p-2.5 text-white outline-none focus:border-blue-500">
+                    <input type="text" id="tVenue" placeholder="Lokasi Dewan" required class="bg-slate-800 border border-slate-700 text-xs rounded-xl p-2.5 text-white outline-none focus:border-blue-500">
+                    <input type="text" id="tOrgan" placeholder="Penganjur" required class="bg-slate-800 border border-slate-700 text-xs rounded-xl p-2.5 text-white outline-none focus:border-blue-500">
+                    <select id="tCat" class="bg-slate-800 border border-slate-700 text-xs rounded-xl p-2.5 text-white outline-none focus:border-blue-500">
+                        <option value="Perseorangan Lelaki">Perseorangan Lelaki</option>
+                        <option value="Perseorangan Wanita">Perseorangan Wanita</option>
+                        <option value="Beregu Lelaki">Beregu Lelaki</option>
+                        <option value="Beregu Wanita">Beregu Wanita</option>
+                        <option value="Beregu Campuran">Beregu Campuran</option>
+                    </select>
+                    <select id="tFormat" class="bg-slate-800 border border-slate-700 text-xs rounded-xl p-2.5 text-white outline-none focus:border-blue-500">
+                        <option value="Hybrid Custom">Hybrid (30 Mata Awal / 15 Mata Akhir)</option>
+                        <option value="Standard 21">Standard (3 Set 21 Mata)</option>
+                    </select>
+                    <button type="submit" class="md:col-span-3 bg-blue-600 hover:bg-blue-500 font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center">
+                        <i data-lucide="check" class="w-4 h-4 mr-1"></i>Simpan Acara Baru
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- TAB 3: PESERTA -->
+        <!-- TAB 2: PESERTA -->
         <section id="tab-peserta" class="tab-content hidden space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div class="flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800">Pengurusan Peserta</h2>
-                    <p class="text-xs text-slate-500">Senarai pemain untuk acara: <span id="pesertaEventName" class="font-bold text-blue-600">--</span></p>
+                    <h2 class="font-extrabold text-base text-slate-800">Senarai Peserta</h2>
+                    <p class="text-xs text-slate-400" id="pesertaEventName">Acara Semasa</p>
                 </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="openAddParticipantModal()" class="admin-only flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center justify-center transition shadow-sm">
-                        <i data-lucide="user-plus" class="w-4 h-4 mr-1.5"></i> Tambah Peserta
-                    </button>
-                    <button onclick="generateSchedule()" class="admin-only flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-xl text-sm flex items-center justify-center transition shadow-sm">
-                        <i data-lucide="git-pull-request" class="w-4 h-4 mr-1.5"></i> Jana Jadual
+                <div class="admin-only">
+                    <button onclick="openAddParticipantModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center shadow-sm">
+                        <i data-lucide="user-plus" class="w-4 h-4 mr-1"></i>Tambah Peserta
                     </button>
                 </div>
             </div>
 
-            <!-- Search -->
-            <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center px-3 shadow-sm">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
-                <input type="text" id="searchPeserta" oninput="renderParticipants()" placeholder="Cari nama atau kelab..." class="w-full text-sm outline-none bg-transparent">
+            <!-- Search Bar -->
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                <input type="text" id="searchPeserta" onkeyup="renderParticipants()" placeholder="Cari nama peserta atau kelab..." class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-400">
             </div>
 
-            <!-- List -->
-            <div id="pesertaList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <!-- Dynamic Participants -->
-            </div>
+            <!-- Participant List -->
+            <div id="pesertaList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </section>
 
-        <!-- TAB 4: JADUAL PERLAWANAN -->
+        <!-- TAB 3: JADUAL & CARTA -->
         <section id="tab-jadual" class="tab-content hidden space-y-4">
             <div class="flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800">Jadual & Carta Perlawanan</h2>
-                    <p class="text-xs text-slate-500">Carta pertandingan penyingkiran.</p>
+                    <h2 class="font-extrabold text-base text-slate-800">Jadual & Carta Kalah Mati</h2>
+                    <p class="text-xs text-slate-400">Carta Perlawanan Kejohanan</p>
+                </div>
+                <div class="admin-only">
+                    <button onclick="generateSchedule()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center shadow-sm">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 mr-1"></i>Jana Jadual Kalah Mati
+                    </button>
                 </div>
             </div>
 
-            <div id="bracketContainer" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto bracket-scroll">
-                <p class="text-center text-slate-400 py-8 text-sm">Sila cipta pertandingan dan jana jadual terlebih dahulu.</p>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                <div id="bracketContainer" class="min-w-max"></div>
             </div>
         </section>
 
-        <!-- TAB 5: LIVE SCOREBOARD / WASIT -->
-        <section id="tab-scoreboard" class="tab-content hidden">
-            <div class="max-w-md mx-auto bg-slate-900 text-white rounded-3xl p-5 shadow-2xl border border-slate-800 flex flex-col justify-between min-h-[80vh]">
-                
-                <!-- Match Top Bar -->
-                <div>
-                    <div class="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800 pb-3 mb-2">
-                        <span id="sbMatchCode" class="font-bold text-yellow-400">PERLAWANAN #--</span>
-                        <span id="sbRuleBadge" class="bg-blue-900/80 text-blue-300 px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-blue-700">1 Set 30 Mata</span>
+        <!-- TAB 4: SCOREBOARD (WASITI & VIEW) -->
+        <section id="tab-scoreboard" class="tab-content hidden space-y-4">
+            <div class="bg-slate-900 text-white p-4 md:p-6 rounded-3xl shadow-xl space-y-6">
+                <!-- Header Status -->
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-800/50 uppercase tracking-wide" id="sbRuleBadge">Format Masa</span>
+                        <h2 class="text-sm md:text-base font-extrabold text-slate-100 mt-1" id="sbMatchCode">Perlawanan</h2>
                     </div>
-
-                    <!-- Sets History Pills -->
-                    <div class="flex justify-center items-center space-x-2 my-2 text-xs">
-                        <span class="text-slate-400">Keputusan Set:</span>
-                        <div id="sbSetScores" class="flex space-x-1.5 font-mono">
-                            <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-300">0 - 0</span>
-                        </div>
-                    </div>
+                    <div id="sbSetScores" class="flex space-x-1.5 text-xs font-mono font-bold"></div>
                 </div>
 
-                <!-- Main Score Board Grid -->
-                <div class="grid grid-cols-2 gap-3 my-4">
-                    
+                <!-- Main Score Board Display -->
+                <div class="grid grid-cols-2 gap-3 md:gap-6 text-center">
                     <!-- Team A -->
-                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-between text-center relative overflow-hidden">
-                        <div class="mt-2">
-                            <div id="sbNameA" class="font-bold text-base leading-tight text-slate-100 truncate">Pemain A</div>
-                            <div id="sbClubA" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab A</div>
-                        </div>
-                        
-                        <!-- Direct Editable Inputs / Large Display -->
-                        <div class="my-3 flex justify-center">
-                            <input type="number" id="inputScoreA" min="0" max="30" onchange="manualUpdateScore('A', this.value)" class="admin-only w-24 text-center text-5xl font-black bg-slate-900 border border-blue-500 rounded-xl text-blue-400 font-mono tracking-tighter focus:outline-none focus:ring-2 focus:ring-blue-400 py-1" />
-                            <div id="viewerScoreA" class="admin-hidden text-6xl font-black text-blue-400 font-mono tracking-tighter">00</div>
+                    <div class="bg-slate-800/80 p-4 md:p-6 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-extrabold text-base md:text-xl text-blue-400 truncate" id="sbNameA">Pemain A</h3>
+                            <p class="text-[11px] text-slate-400 mt-0.5" id="sbClubA">Kelab</p>
                         </div>
 
-                        <button onclick="addPoint('A')" class="admin-only w-full bg-blue-600 active:bg-blue-700 hover:bg-blue-500 text-white font-extrabold py-3.5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
-                            +1 Mata
-                        </button>
+                        <!-- Big Digital Score -->
+                        <div class="my-4">
+                            <!-- Admin Interactive Score Control -->
+                            <div class="admin-only space-y-2">
+                                <input type="number" id="inputScoreA" onchange="manualUpdateScore('A', this.value)" class="w-24 md:w-32 bg-slate-950 border border-slate-700 text-amber-400 font-mono text-4xl md:text-6xl font-extrabold text-center rounded-2xl p-2 outline-none focus:ring-2 focus:ring-amber-400">
+                                <button onclick="addPoint('A')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm md:text-base py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center">
+                                    <i data-lucide="plus" class="w-5 h-5 mr-1"></i>MATA (+1)
+                                </button>
+                            </div>
+                            <!-- Viewer Readonly Score -->
+                            <div class="admin-hidden">
+                                <span class="font-mono text-6xl md:text-8xl font-black text-amber-400 tracking-tighter" id="viewerScoreA">00</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Team B -->
-                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-between text-center relative overflow-hidden">
-                        <div class="mt-2">
-                            <div id="sbNameB" class="font-bold text-base leading-tight text-slate-100 truncate">Pemain B</div>
-                            <div id="sbClubB" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab B</div>
-                        </div>
-                        
-                        <!-- Direct Editable Inputs / Large Display -->
-                        <div class="my-3 flex justify-center">
-                            <input type="number" id="inputScoreB" min="0" max="30" onchange="manualUpdateScore('B', this.value)" class="admin-only w-24 text-center text-5xl font-black bg-slate-900 border border-rose-500 rounded-xl text-rose-400 font-mono tracking-tighter focus:outline-none focus:ring-2 focus:ring-rose-400 py-1" />
-                            <div id="viewerScoreB" class="admin-hidden text-6xl font-black text-rose-400 font-mono tracking-tighter">00</div>
+                    <div class="bg-slate-800/80 p-4 md:p-6 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-extrabold text-base md:text-xl text-rose-400 truncate" id="sbNameB">Pemain B</h3>
+                            <p class="text-[11px] text-slate-400 mt-0.5" id="sbClubB">Kelab</p>
                         </div>
 
-                        <button onclick="addPoint('B')" class="admin-only w-full bg-rose-600 active:bg-rose-700 hover:bg-rose-500 text-white font-extrabold py-3.5 rounded-xl shadow-lg touch-action-manipulation text-xl active:scale-95 transition flex justify-center items-center">
-                            +1 Mata
-                        </button>
+                        <!-- Big Digital Score -->
+                        <div class="my-4">
+                            <!-- Admin Interactive Score Control -->
+                            <div class="admin-only space-y-2">
+                                <input type="number" id="inputScoreB" onchange="manualUpdateScore('B', this.value)" class="w-24 md:w-32 bg-slate-950 border border-slate-700 text-amber-400 font-mono text-4xl md:text-6xl font-extrabold text-center rounded-2xl p-2 outline-none focus:ring-2 focus:ring-amber-400">
+                                <button onclick="addPoint('B')" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-sm md:text-base py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center">
+                                    <i data-lucide="plus" class="w-5 h-5 mr-1"></i>MATA (+1)
+                                </button>
+                            </div>
+                            <!-- Viewer Readonly Score -->
+                            <div class="admin-hidden">
+                                <span class="font-mono text-6xl md:text-8xl font-black text-amber-400 tracking-tighter" id="viewerScoreB">00</span>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
 
-                <!-- Referee Action Buttons -->
-                <div class="space-y-3 pt-2">
-                    <div class="grid grid-cols-2 gap-2 admin-only">
-                        <button onclick="undoPoint()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
-                            <i data-lucide="undo-2" class="w-4 h-4 mr-1"></i> Undo Last
-                        </button>
-                        <button onclick="switchSides()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
-                            <i data-lucide="arrow-left-right" class="w-4 h-4 mr-1"></i> Tukar Side
-                        </button>
-                    </div>
-                    <button onclick="switchTab('jadual')" class="w-full bg-slate-800/50 text-slate-400 hover:text-white py-2 rounded-xl text-xs font-medium">
-                        Kembali ke Jadual
+                <!-- Referee Control Tools -->
+                <div class="admin-only pt-2 border-t border-slate-800 flex justify-between items-center">
+                    <button onclick="undoPoint()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center border border-slate-700">
+                        <i data-lucide="undo-2" class="w-3.5 h-3.5 mr-1.5"></i>Undo Mata
+                    </button>
+                    <button onclick="switchSides()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center border border-slate-700">
+                        <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 mr-1.5"></i>Tukar Gelanggang
                     </button>
                 </div>
-
             </div>
         </section>
 
-        <!-- TAB 6: KEPUTUSAN / SEJARAH -->
+        <!-- TAB 5: KEPUTUSAN -->
         <section id="tab-keputusan" class="tab-content hidden space-y-6">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
-                    <i data-lucide="award" class="w-6 h-6 text-yellow-500 mr-2"></i> Keputusan & Pemenang
+            <!-- Podium -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+                <h2 class="font-extrabold text-base text-slate-800 mb-6 flex items-center justify-center">
+                    <i data-lucide="award" class="w-5 h-5 mr-2 text-yellow-500"></i>Pemenang Kejohanan
                 </h2>
-                
-                <!-- Podium Display -->
-                <div class="grid grid-cols-3 gap-2 sm:gap-4 my-6 text-center max-w-lg mx-auto">
-                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex flex-col justify-between order-2 sm:order-1">
-                        <div>
-                            <span class="text-2xl">🥈</span>
-                            <div class="text-xs font-bold text-slate-400 uppercase mt-1">Naib Juara</div>
-                            <div id="podium2" class="font-extrabold text-sm text-slate-800 mt-2">--</div>
+                <div class="flex justify-center items-end space-x-3 md:space-x-6 max-w-md mx-auto">
+                    <!-- Naib Juara -->
+                    <div class="w-1/3 space-y-2">
+                        <div class="bg-slate-100 p-2.5 rounded-2xl border border-slate-200">
+                            <i data-lucide="medal" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                            <p class="font-bold text-xs text-slate-700 truncate" id="podium2">--</p>
+                            <p class="text-[10px] text-slate-400">Naib Juara</p>
                         </div>
+                        <div class="h-20 bg-slate-300 rounded-t-xl flex items-center justify-center font-extrabold text-slate-600 text-sm">2</div>
                     </div>
-                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex flex-col justify-between order-1 sm:order-2 transform sm:-translate-y-2">
-                        <div>
-                            <span class="text-3xl">🥇</span>
-                            <div class="text-xs font-bold text-amber-600 uppercase mt-1">Juara</div>
-                            <div id="podium1" class="font-extrabold text-base text-slate-900 mt-2">--</div>
+                    <!-- Juara -->
+                    <div class="w-1/3 space-y-2">
+                        <div class="bg-yellow-50 p-3 rounded-2xl border border-yellow-200">
+                            <i data-lucide="crown" class="w-8 h-8 mx-auto text-yellow-500 mb-1"></i>
+                            <p class="font-extrabold text-xs text-slate-800 truncate" id="podium1">--</p>
+                            <p class="text-[10px] font-bold text-yellow-600">JUARA</p>
                         </div>
+                        <div class="h-28 bg-yellow-400 rounded-t-xl flex items-center justify-center font-extrabold text-yellow-950 text-base">1</div>
                     </div>
-                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex flex-col justify-between order-3">
-                        <div>
-                            <span class="text-2xl">🥉</span>
-                            <div class="text-xs font-bold text-slate-400 uppercase mt-1">Tempat Ketiga</div>
-                            <div id="podium3" class="font-extrabold text-sm text-slate-800 mt-2">--</div>
+                    <!-- Tempat ke-3 -->
+                    <div class="w-1/3 space-y-2">
+                        <div class="bg-amber-50 p-2.5 rounded-2xl border border-amber-200">
+                            <i data-lucide="medal" class="w-6 h-6 mx-auto text-amber-700 mb-1"></i>
+                            <p class="font-bold text-xs text-slate-700 truncate" id="podium3">--</p>
+                            <p class="text-[10px] text-amber-800">Ke-3 / S.Akhir</p>
                         </div>
+                        <div class="h-14 bg-amber-600/70 rounded-t-xl flex items-center justify-center font-extrabold text-white text-sm">3</div>
                     </div>
                 </div>
             </div>
 
             <!-- History List -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Sejarah Perlawanan Tamat</h3>
-                <div id="historyList" class="space-y-2">
-                    <!-- Dynamic Matches -->
-                </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <h3 class="font-extrabold text-sm text-slate-800">Rekod Perlawanan Tamat</h3>
+                <div id="historyList" class="space-y-2"></div>
             </div>
         </section>
 
-        <!-- TAB 7: STATISTIK -->
+        <!-- TAB 6: STATISTIK -->
         <section id="tab-statistik" class="tab-content hidden space-y-4">
-            <h2 class="text-xl font-bold text-slate-800">Statistik Pertandingan</h2>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase">Ringkasan Mata</h3>
-                    <div class="flex justify-between items-center py-2 border-b">
-                        <span class="text-sm text-slate-600">Jumlah Mata Dikumpul</span>
-                        <span id="stTotalPoints" class="font-bold text-blue-600">0</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b">
-                        <span class="text-sm text-slate-600">Jumlah Set Dimainkan</span>
-                        <span id="stTotalSets" class="font-bold text-blue-600">0</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-sm text-slate-600">Purata Mata per Perlawanan</span>
-                        <span id="stAvgPoints" class="font-bold text-blue-600">0</span>
-                    </div>
+            <h2 class="font-extrabold text-base text-slate-800">Statistik Acara</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Mata Dijaringkan</p>
+                    <h3 class="text-3xl font-black text-blue-600 mt-2" id="stTotalPoints">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Set Dimainkan</p>
+                    <h3 class="text-3xl font-black text-indigo-600 mt-2" id="stTotalSets">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-400 font-bold uppercase">Purata Mata / Perlawanan</p>
+                    <h3 class="text-3xl font-black text-emerald-600 mt-2" id="stAvgPoints">0</h3>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar for Mobile -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 md:hidden">
-        <div class="max-w-md mx-auto flex justify-around items-center px-2 py-1.5">
-            <button onclick="switchTab('dashboard')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="dashboard">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium mt-0.5">Utama</span>
-            </button>
-            <button onclick="switchTab('peserta')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="peserta">
-                <i data-lucide="users" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium mt-0.5">Peserta</span>
-            </button>
-            <button onclick="switchTab('jadual')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="jadual">
-                <i data-lucide="git-pull-request" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium mt-0.5">Jadual</span>
-            </button>
-            <button onclick="switchTab('keputusan')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="keputusan">
-                <i data-lucide="trophy" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium mt-0.5">Keputusan</span>
-            </button>
-            <button onclick="switchTab('statistik')" class="nav-btn p-2 text-slate-500 hover:text-blue-600 flex flex-col items-center" data-target="statistik">
-                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium mt-0.5">Statistik</span>
+    <!-- Mobile Bottom Navigation -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 flex justify-around items-center z-40 shadow-lg">
+        <button onclick="switchTab('dashboard')" data-target="dashboard" class="nav-btn flex flex-col items-center text-slate-500">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span class="text-[9px] font-bold mt-0.5">Utama</span>
+        </button>
+        <button onclick="switchTab('peserta')" data-target="peserta" class="nav-btn flex flex-col items-center text-slate-500">
+            <i data-lucide="users" class="w-5 h-5"></i><span class="text-[9px] font-bold mt-0.5">Peserta</span>
+        </button>
+        <button onclick="switchTab('jadual')" data-target="jadual" class="nav-btn flex flex-col items-center text-slate-500">
+            <i data-lucide="git-fork" class="w-5 h-5"></i><span class="text-[9px] font-bold mt-0.5">Jadual</span>
+        </button>
+        <button onclick="switchTab('scoreboard')" data-target="scoreboard" class="nav-btn flex flex-col items-center text-slate-500">
+            <i data-lucide="activity" class="w-5 h-5"></i><span class="text-[9px] font-bold mt-0.5">Skor</span>
+        </button>
+        <button onclick="switchTab('keputusan')" data-target="keputusan" class="nav-btn flex flex-col items-center text-slate-500">
+            <i data-lucide="award" class="w-5 h-5"></i><span class="text-[9px] font-bold mt-0.5">Hasil</span>
+        </button>
+    </div>
+
+    <!-- MODAL: ROLE / LOGIN PENTADBIR -->
+    <div id="modalRole" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-extrabold text-base text-slate-800">Log Masuk Pentadbir</h3>
+                <button onclick="document.getElementById('modalRole').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500">Masukkan PIN Pentadbir untuk membuka mod kemaskini skor dan jadual.</p>
+            <input type="password" id="loginPin" placeholder="PIN (Lalai: 2468)" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 text-center font-mono text-lg font-bold outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="loginAsAdmin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl transition">
+                Sahkan PIN
             </button>
         </div>
-    </nav>
+    </div>
 
-    <!-- Modal Add Participant -->
-    <div id="modalParticipant" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4 shadow-xl">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-slate-800">Tambah Peserta Baru</h3>
+    <!-- MODAL: TAMBAH PESERTA -->
+    <div id="modalParticipant" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-extrabold text-base text-slate-800">Tambah Peserta Baru</h3>
                 <button onclick="closeAddParticipantModal()" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <form id="formParticipant" onsubmit="saveParticipant(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pemain 1 / Pasukan</label>
-                    <input type="text" id="pName1" required placeholder="Cth: Ahmad Albab" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Nama Pemain 1 / Perseorangan</label>
+                    <input type="text" id="pName1" required placeholder="Nama Penuh" class="w-full bg-slate-100 border border-slate-200 text-xs rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Pemain 2 (Jika Beregu)</label>
-                    <input type="text" id="pName2" placeholder="Cth: Chong Wei" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Nama Pemain 2 (Jika Beregu)</label>
+                    <input type="text" id="pName2" placeholder="Kosongkan jika acara perseorangan" class="w-full bg-slate-100 border border-slate-200 text-xs rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Sekolah / Kelab</label>
-                    <input type="text" id="pClub" placeholder="Cth: SMK Victoria" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Kelab / Pasukan / Sekolah</label>
+                    <input type="text" id="pClub" placeholder="cth: Kelab Badminton Kluang" class="w-full bg-slate-100 border border-slate-200 text-xs rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeAddParticipantModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-blue-700">Simpan</button>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeAddParticipantModal()" class="px-4 py-2 text-xs font-bold text-slate-500">Batal</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition">Simpan Peserta</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Change Role (PIN Login) -->
-    <div id="modalRole" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-xl text-center">
-            <h3 class="font-bold text-slate-800">Log Masuk Pentadbir (Admin)</h3>
-            <p class="text-xs text-slate-500">Masukkan PIN untuk menukar ke mod Pentadbir / Wasiti.</p>
-            <input type="password" id="loginPin" maxlength="6" placeholder="PIN (Lalai: 2468)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center text-lg tracking-widest outline-none focus:ring-2 focus:ring-blue-500">
-            <div class="flex space-x-2">
-                <button onclick="toggleRoleModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Batal</button>
-                <button onclick="loginAsAdmin()" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">Log Masuk</button>
-            </div>
-        </div>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-16 md:bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl hidden flex items-center space-x-2 border border-slate-700 z-50 text-xs font-bold">
+        <i data-lucide="info" class="w-4 h-4 text-amber-400"></i>
+        <span id="toastMsg">Mesej</span>
     </div>
 
     <!-- JavaScript Application Logic -->
     <script>
         // --- FIREBASE CONFIGURATION & INITIALIZATION ---
         const firebaseConfig = {
-            apiKey: "AIzaSyD...", // 此处自动使用您的完整配置键
+            apiKey: "BL5RCPT8duiMwa_rGQXdDmI1ZA9Cg7fEeSAO1hsUFpAi4VG7PbxjOUpGV1M9KnmvBy2OJOzaQu0PeI-3dmBTtr8",
             authDomain: "badminton-tournament-d3b99.firebaseapp.com",
             databaseURL: "https://badminton-tournament-d3b99-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "badminton-tournament-d3b99",
@@ -496,29 +435,54 @@
             applyRolePermissions();
             updateUI();
 
-            // Realtime Sync Listener for Viewers/Other Devices
+            // 1. 页面一打开，立即从 Firebase 强制拉取云端最新数据
+            db.ref('badminton_app_state').once('value').then((snapshot) => {
+                const remoteState = snapshot.val();
+                if (remoteState && remoteState.tournaments) {
+                    appState.tournaments = remoteState.tournaments;
+                    appState.activeTournamentId = remoteState.activeTournamentId || remoteState.tournaments[0].id;
+                    saveLocalOnly();
+                    updateUI();
+                    refreshActiveTab();
+                }
+            });
+
+            // 2. Realtime 实时监听：任何设备修改，其它设备秒级同步
             db.ref('badminton_app_state').on('value', (snapshot) => {
                 const remoteState = snapshot.val();
-                if (remoteState && !appState.isAdmin) {
-                    appState = { ...remoteState, isAdmin: false };
+                if (remoteState && remoteState.tournaments) {
+                    appState.tournaments = remoteState.tournaments;
+                    appState.activeTournamentId = remoteState.activeTournamentId;
+                    saveLocalOnly();
                     updateUI();
-                    const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-', '');
-                    if (activeTab === 'scoreboard') renderScoreboard();
-                    if (activeTab === 'jadual') renderBracket();
-                    if (activeTab === 'peserta') renderParticipants();
-                    if (activeTab === 'keputusan') renderResults();
-                    if (activeTab === 'statistik') renderStats();
+                    refreshActiveTab();
                 }
             });
         });
 
-        function saveStateToStorage() {
+        function refreshActiveTab() {
+            const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-', '');
+            if (activeTab === 'scoreboard') renderScoreboard();
+            if (activeTab === 'jadual') renderBracket();
+            if (activeTab === 'peserta') renderParticipants();
+            if (activeTab === 'keputusan') renderResults();
+            if (activeTab === 'statistik') renderStats();
+        }
+
+        function saveLocalOnly() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        }
+
+        function saveStateToStorage() {
+            saveLocalOnly();
             updateUI();
 
-            // 当 Admin 更新状态时，同步写回 Firebase Realtime Database
-            if (appState.isAdmin && db) {
-                db.ref('badminton_app_state').set(appState);
+            // 无论是否是 Admin，只要数据发生改变，直接无条件写回 Firebase 云端数据库
+            if (db) {
+                db.ref('badminton_app_state').set({
+                    tournaments: appState.tournaments,
+                    activeTournamentId: appState.activeTournamentId
+                });
             }
         }
 
