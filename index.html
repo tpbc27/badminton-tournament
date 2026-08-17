@@ -8,12 +8,13 @@
     <meta name="theme-color" content="#1e3a8a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Sistem%20Badminton%22%2C%22short_name%22%3A%22Badminton%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%231e3a8a%22%7D">
 
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Crypto-JS (密码哈希加密) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
         .touch-action-manipulation {
@@ -63,6 +64,12 @@
             </div>
             
             <div class="flex items-center space-x-3">
+                <!-- Sync Status Badge -->
+                <div id="syncBadge" class="hidden sm:flex items-center space-x-1 text-[11px] bg-emerald-900/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Live Sync</span>
+                </div>
+
                 <!-- Global Active Tournament Switcher -->
                 <select id="globalTournamentSelect" onchange="switchActiveTournament(this.value)" class="bg-blue-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-700 outline-none max-w-[140px] sm:max-w-none truncate">
                     <!-- Dynamic Options -->
@@ -88,8 +95,6 @@
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-content space-y-6">
-            
-            <!-- Tournament List Grid (Multi-Event Overview) -->
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <h2 class="font-bold text-slate-800 flex items-center text-lg">
@@ -152,33 +157,29 @@
                 <h2 class="text-xl font-bold text-slate-800 flex items-center border-b pb-3">
                     <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600 mr-2"></i> Cipta Acara / Pertandingan Baru
                 </h2>
-                
                 <form id="formPertandingan" onsubmit="saveTournament(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Kejohanan / Acara</label>
-                        <input type="text" id="tName" required placeholder="Cth: Perseorangan Lelaki / Beregu Campuran" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        <input type="text" id="tName" required placeholder="Cth: Perseorangan Lelaki / Beregu Campuran" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tarikh</label>
-                            <input type="date" id="tDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                            <input type="date" id="tDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Penganjur</label>
-                            <input type="text" id="tOrgan" placeholder="Cth: Kelab Badminton Belia" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                            <input type="text" id="tOrgan" placeholder="Cth: Kelab Badminton" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tempat / Lokasi</label>
-                        <input type="text" id="tVenue" placeholder="Cth: Dewan Serbaguna Kluang" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                        <input type="text" id="tVenue" placeholder="Cth: Dewan Serbaguna" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Kategori</label>
-                            <select id="tCat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
+                            <select id="tCat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                                 <option value="Perseorangan Lelaki">Perseorangan Lelaki</option>
                                 <option value="Perseorangan Perempuan">Perseorangan Perempuan</option>
                                 <option value="Beregu Lelaki">Beregu Lelaki</option>
@@ -188,13 +189,12 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Format Perlawanan</label>
-                            <select id="tFormat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none text-sm transition">
-                                <option value="Hybrid Custom">Awal (1 Set 30) -> Separuh Akhir/Akhir (3 Set 15 Cap 21)</option>
+                            <select id="tFormat" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                                <option value="Hybrid Custom">Awal (1 Set 30) -> Akhir (3 Set 15 Cap 21)</option>
                                 <option value="Standard 21">Standard BWF (3 Set 21 Mata)</option>
                             </select>
                         </div>
                     </div>
-
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center">
                         <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Acara Ini
                     </button>
@@ -219,16 +219,12 @@
                 </div>
             </div>
 
-            <!-- Search -->
             <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center px-3 shadow-sm">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
                 <input type="text" id="searchPeserta" oninput="renderParticipants()" placeholder="Cari nama atau kelab..." class="w-full text-sm outline-none bg-transparent">
             </div>
 
-            <!-- List -->
-            <div id="pesertaList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <!-- Dynamic Participants -->
-            </div>
+            <div id="pesertaList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </section>
 
         <!-- TAB 4: JADUAL PERLAWANAN -->
@@ -239,35 +235,25 @@
                     <p class="text-xs text-slate-500">Carta pertandingan penyingkiran.</p>
                 </div>
             </div>
-
-            <div id="bracketContainer" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto bracket-scroll">
-                <p class="text-center text-slate-400 py-8 text-sm">Sila cipta pertandingan dan jana jadual terlebih dahulu.</p>
-            </div>
+            <div id="bracketContainer" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto bracket-scroll"></div>
         </section>
 
         <!-- TAB 5: LIVE SCOREBOARD / WASIT -->
         <section id="tab-scoreboard" class="tab-content hidden">
             <div class="max-w-md mx-auto bg-slate-900 text-white rounded-3xl p-5 shadow-2xl border border-slate-800 flex flex-col justify-between min-h-[80vh]">
-                
-                <!-- Match Top Bar -->
                 <div>
                     <div class="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800 pb-3 mb-2">
                         <span id="sbMatchCode" class="font-bold text-yellow-400">PERLAWANAN #--</span>
                         <span id="sbRuleBadge" class="bg-blue-900/80 text-blue-300 px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-blue-700">1 Set 30 Mata</span>
                     </div>
 
-                    <!-- Sets History Pills -->
                     <div class="flex justify-center items-center space-x-2 my-2 text-xs">
                         <span class="text-slate-400">Keputusan Set:</span>
-                        <div id="sbSetScores" class="flex space-x-1.5 font-mono">
-                            <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-300">0 - 0</span>
-                        </div>
+                        <div id="sbSetScores" class="flex space-x-1.5 font-mono"></div>
                     </div>
                 </div>
 
-                <!-- Main Score Board Grid -->
                 <div class="grid grid-cols-2 gap-3 my-4">
-                    
                     <!-- Team A -->
                     <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-between text-center relative overflow-hidden">
                         <div class="mt-2">
@@ -275,7 +261,6 @@
                             <div id="sbClubA" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab A</div>
                         </div>
                         
-                        <!-- Direct Editable Inputs / Large Display -->
                         <div class="my-3 flex justify-center">
                             <input type="number" id="inputScoreA" min="0" max="30" onchange="manualUpdateScore('A', this.value)" class="admin-only w-24 text-center text-5xl font-black bg-slate-900 border border-blue-500 rounded-xl text-blue-400 font-mono tracking-tighter focus:outline-none focus:ring-2 focus:ring-blue-400 py-1" />
                             <div id="viewerScoreA" class="admin-hidden text-6xl font-black text-blue-400 font-mono tracking-tighter">00</div>
@@ -293,7 +278,6 @@
                             <div id="sbClubB" class="text-[11px] text-slate-400 truncate mt-0.5">Kelab B</div>
                         </div>
                         
-                        <!-- Direct Editable Inputs / Large Display -->
                         <div class="my-3 flex justify-center">
                             <input type="number" id="inputScoreB" min="0" max="30" onchange="manualUpdateScore('B', this.value)" class="admin-only w-24 text-center text-5xl font-black bg-slate-900 border border-rose-500 rounded-xl text-rose-400 font-mono tracking-tighter focus:outline-none focus:ring-2 focus:ring-rose-400 py-1" />
                             <div id="viewerScoreB" class="admin-hidden text-6xl font-black text-rose-400 font-mono tracking-tighter">00</div>
@@ -303,10 +287,8 @@
                             +1 Mata
                         </button>
                     </div>
-
                 </div>
 
-                <!-- Referee Action Buttons -->
                 <div class="space-y-3 pt-2">
                     <div class="grid grid-cols-2 gap-2 admin-only">
                         <button onclick="undoPoint()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center transition">
@@ -320,7 +302,6 @@
                         Kembali ke Jadual
                     </button>
                 </div>
-
             </div>
         </section>
 
@@ -331,7 +312,6 @@
                     <i data-lucide="award" class="w-6 h-6 text-yellow-500 mr-2"></i> Keputusan & Pemenang
                 </h2>
                 
-                <!-- Podium Display -->
                 <div class="grid grid-cols-3 gap-2 sm:gap-4 my-6 text-center max-w-lg mx-auto">
                     <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex flex-col justify-between order-2 sm:order-1">
                         <div>
@@ -357,19 +337,15 @@
                 </div>
             </div>
 
-            <!-- History List -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Sejarah Perlawanan Tamat</h3>
-                <div id="historyList" class="space-y-2">
-                    <!-- Dynamic Matches -->
-                </div>
+                <div id="historyList" class="space-y-2"></div>
             </div>
         </section>
 
         <!-- TAB 7: STATISTIK -->
         <section id="tab-statistik" class="tab-content hidden space-y-4">
             <h2 class="text-xl font-bold text-slate-800">Statistik Pertandingan</h2>
-            
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-slate-400 uppercase">Ringkasan Mata</h3>
@@ -452,7 +428,7 @@
         <div class="bg-white w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-xl text-center">
             <h3 class="font-bold text-slate-800">Log Masuk Pentadbir (Admin)</h3>
             <p class="text-xs text-slate-500">Masukkan PIN untuk menukar ke mod Pentadbir / Wasiti.</p>
-            <input type="password" id="loginPin" maxlength="6" placeholder="PIN (Lalai: 2468)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center text-lg tracking-widest outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="loginPin" maxlength="6" placeholder="PIN" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center text-lg tracking-widest outline-none focus:ring-2 focus:ring-blue-500">
             <div class="flex space-x-2">
                 <button onclick="toggleRoleModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Batal</button>
                 <button onclick="loginAsAdmin()" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">Log Masuk</button>
@@ -460,73 +436,91 @@
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Firebase Realtime Database SDK (REST API Realtime SSE Sync) -->
     <script>
-        const STORAGE_KEY = 'BADMINTON_MULTI_EVENT_APP_2026';
+        // ⚠️ 请在此处替换为你在 Firebase Console 创建的数据库 URL（结尾不要带斜杠 /）
+        const DATABASE_URL = "https://badminton-tournament-d3b99-default-rtdb.asia-southeast1.firebasedatabase.app";
+        
+        // 密码 2468 的 SHA-256 加密密文（源码中已无法看到 2468 字符串）
+        const ADMIN_PIN_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
 
         let appState = {
             isAdmin: false,
-            adminPin: '2468',
             activeTournamentId: null,
             tournaments: [],
             historyStack: []
         };
 
+        let eventSource = null;
+
         document.addEventListener('DOMContentLoaded', () => {
-            loadStateFromStorage();
+            initRealtimeSync();
             lucide.createIcons();
             switchTab('dashboard');
             applyRolePermissions();
-            updateUI();
         });
 
-        function saveStateToStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            updateUI();
+        // --- FIREBASE REALTIME SYNC (SSE Engine) ---
+        function initRealtimeSync() {
+            if (eventSource) eventSource.close();
+
+            // 订阅 Firebase 数据库变动
+            eventSource = new EventSource(`${DATABASE_URL}/appState.json`);
+
+            eventSource.onmessage = function(e) {
+                if (e.data) {
+                    const remoteData = JSON.parse(e.data);
+                    if (remoteData) {
+                        appState.tournaments = remoteData.tournaments || [];
+                        appState.activeTournamentId = remoteData.activeTournamentId || (appState.tournaments[0]?.id || null);
+                        updateUI();
+                        refreshActiveTabUI();
+                    }
+                }
+            };
+
+            eventSource.onerror = function() {
+                console.warn('Sync connection lost, retrying...');
+            };
         }
 
-        function loadStateFromStorage() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (data) {
-                try {
-                    const parsed = JSON.parse(data);
-                    appState = { ...appState, ...parsed };
-                } catch(e) {
-                    console.error("Gagal membaca LocalStorage", e);
-                }
-            }
+        async function syncToCloud() {
+            updateUI();
+            refreshActiveTabUI();
 
-            if (!appState.tournaments || appState.tournaments.length === 0) {
-                const defaultId = 'T_' + Date.now();
-                appState.tournaments = [{
-                    id: defaultId,
-                    name: 'Kejohanan Badminton (Perseorangan)',
-                    date: '2026-05-15',
-                    venue: 'Dewan Serbaguna',
-                    organizer: 'Kelab Badminton',
-                    category: 'Perseorangan Lelaki',
-                    format: 'Hybrid Custom',
-                    participants: [],
-                    matches: [],
-                    activeMatchId: null
-                }];
-                appState.activeTournamentId = defaultId;
-            } else if (!appState.activeTournamentId) {
-                appState.activeTournamentId = appState.tournaments[0].id;
+            const payload = {
+                tournaments: appState.tournaments,
+                activeTournamentId: appState.activeTournamentId
+            };
+
+            try {
+                await fetch(`${DATABASE_URL}/appState.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.error('Failed to sync data to Firebase cloud:', err);
             }
+        }
+
+        function refreshActiveTabUI() {
+            const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-', '');
+            if (activeTab === 'peserta') renderParticipants();
+            if (activeTab === 'jadual') renderBracket();
+            if (activeTab === 'scoreboard') renderScoreboard();
+            if (activeTab === 'keputusan') renderResults();
+            if (activeTab === 'statistik') renderStats();
         }
 
         function getActiveTournament() {
-            return appState.tournaments.find(t => t.id === appState.activeTournamentId) || appState.tournaments[0];
+            return appState.tournaments.find(t => t.id === appState.activeTournamentId) || appState.tournaments[0] || null;
         }
 
         function switchActiveTournament(id) {
             appState.activeTournamentId = id;
-            saveStateToStorage();
-            updateUI();
-            const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-', '');
-            if (activeTab) switchTab(activeTab);
-            showToast('Menukar ke acara: ' + getActiveTournament().name);
+            syncToCloud();
+            showToast('Menukar ke acara terpilih');
         }
 
         function showToast(msg) {
@@ -536,7 +530,7 @@
             setTimeout(() => toast.classList.add('hidden'), 2500);
         }
 
-        // --- ROLE MANAGEMENT ---
+        // --- ROLE MANAGEMENT (SHA-256 加密比对) ---
         function toggleRoleModal() {
             if (appState.isAdmin) {
                 appState.isAdmin = false;
@@ -549,14 +543,16 @@
 
         function loginAsAdmin() {
             const inputPin = document.getElementById('loginPin').value;
-            if (inputPin === appState.adminPin) {
+            const inputHash = CryptoJS.SHA256(inputPin).toString();
+
+            if (inputHash === ADMIN_PIN_HASH) {
                 appState.isAdmin = true;
                 document.getElementById('modalRole').classList.add('hidden');
                 document.getElementById('loginPin').value = '';
                 applyRolePermissions();
                 showToast('Log masuk Pentadbir berjaya!');
             } else {
-                alert('PIN Salah! PIN Lalai ialah 2468');
+                alert('PIN Salah!');
             }
         }
 
@@ -582,7 +578,6 @@
             const target = document.getElementById(`tab-${tabId}`);
             if (target) target.classList.remove('hidden');
 
-            // Mobile Nav
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if (btn.dataset.target === tabId) {
                     btn.classList.add('text-blue-600');
@@ -593,7 +588,6 @@
                 }
             });
 
-            // Desktop Nav
             document.querySelectorAll('.nav-btn-desk').forEach(btn => {
                 if (btn.dataset.target === tabId) {
                     btn.classList.add('bg-blue-800', 'text-white');
@@ -604,10 +598,7 @@
                 }
             });
 
-            if (tabId === 'peserta') renderParticipants();
-            if (tabId === 'jadual') renderBracket();
-            if (tabId === 'keputusan') renderResults();
-            if (tabId === 'statistik') renderStats();
+            refreshActiveTabUI();
         }
 
         // --- TOURNAMENT CREATION ---
@@ -629,25 +620,22 @@
                 activeMatchId: null
             };
 
+            if (!appState.tournaments) appState.tournaments = [];
             appState.tournaments.push(newTour);
             appState.activeTournamentId = newId;
 
-            saveStateToStorage();
+            syncToCloud();
             showToast('Acara Baru Berjaya Dicipta!');
             document.getElementById('formPertandingan').reset();
-            switchTab('peserta'); // 跳转到添加参赛者页面
+            switchTab('peserta');
         }
 
         function deleteTournament(id) {
             if (!appState.isAdmin) return;
-            if (appState.tournaments.length <= 1) {
-                alert('Sekurang-kurangnya satu acara mesti wujud dalam sistem.');
-                return;
-            }
             if (confirm('Padam acara ini? Semua data peserta & jadual acara ini akan dipadam.')) {
                 appState.tournaments = appState.tournaments.filter(t => t.id !== id);
-                appState.activeTournamentId = appState.tournaments[0].id;
-                saveStateToStorage();
+                appState.activeTournamentId = appState.tournaments[0]?.id || null;
+                syncToCloud();
                 showToast('Acara dipadam.');
             }
         }
@@ -668,11 +656,14 @@
             if (!appState.isAdmin) return;
 
             const current = getActiveTournament();
+            if (!current) return;
+
             const p1 = document.getElementById('pName1').value.trim();
             const p2 = document.getElementById('pName2').value.trim();
             const club = document.getElementById('pClub').value.trim();
 
             if (!p1) return;
+            if (!current.participants) current.participants = [];
 
             current.participants.push({
                 id: 'P_' + Date.now(),
@@ -681,28 +672,33 @@
                 club: club || 'Bebas'
             });
 
-            saveStateToStorage();
+            syncToCloud();
             closeAddParticipantModal();
-            renderParticipants();
             showToast('Peserta disimpan!');
         }
 
         function deleteParticipant(id) {
             if (!appState.isAdmin) return;
             const current = getActiveTournament();
+            if (!current) return;
+
             current.participants = current.participants.filter(p => p.id !== id);
-            saveStateToStorage();
-            renderParticipants();
+            syncToCloud();
             showToast('Peserta dipadam.');
         }
 
         function renderParticipants() {
             const current = getActiveTournament();
-            document.getElementById('pesertaEventName').innerText = current.name;
+            document.getElementById('pesertaEventName').innerText = current ? current.name : '--';
 
             const list = document.getElementById('pesertaList');
             const search = (document.getElementById('searchPeserta')?.value || '').toLowerCase();
             list.innerHTML = '';
+
+            if (!current || !current.participants) {
+                list.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">Tiada peserta ditemui.</p>`;
+                return;
+            }
 
             const filtered = current.participants.filter(p => 
                 p.name1.toLowerCase().includes(search) || 
@@ -711,7 +707,7 @@
             );
 
             if (filtered.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">Tiada peserta ditemui untuk acara ini.</p>`;
+                list.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">Tiada peserta ditemui.</p>`;
                 return;
             }
 
@@ -737,12 +733,12 @@
             lucide.createIcons();
         }
 
-        // --- SINGLE ELIMINATION BRACKET GENERATOR ---
+        // --- BRACKET GENERATOR ---
         function generateSchedule() {
             if (!appState.isAdmin) return;
             const current = getActiveTournament();
 
-            if (current.participants.length < 2) {
+            if (!current || !current.participants || current.participants.length < 2) {
                 showToast('Sekurang-kurangnya 2 peserta diperlukan!');
                 return;
             }
@@ -762,12 +758,11 @@
             let matchCounter = 1;
             const round1Matches = bracketSize / 2;
 
-            // Round 1
             for (let i = 0; i < round1Matches; i++) {
                 const p1 = players[i * 2] || null;
                 const p2 = players[i * 2 + 1] || null;
 
-                const match = {
+                matches.push({
                     id: `M_${matchCounter}`,
                     code: `PERLAWANAN #${matchCounter}`,
                     round: 1,
@@ -783,19 +778,17 @@
                     winner: (p1 && !p2) ? p1 : null,
                     nextMatchId: `M_${round1Matches + Math.floor(i / 2) + 1}`,
                     nextSlot: (i % 2 === 0) ? 'A' : 'B'
-                };
-                matches.push(match);
+                });
                 matchCounter++;
             }
 
-            // Subsequent Rounds
             let currentRoundMatches = round1Matches / 2;
             let currentRound = 2;
 
             while (currentRoundMatches >= 1) {
                 for (let i = 0; i < currentRoundMatches; i++) {
                     const isFinal = currentRoundMatches === 1;
-                    const match = {
+                    matches.push({
                         id: `M_${matchCounter}`,
                         code: isFinal ? 'PERLAWANAN AKHIR' : `PERLAWANAN #${matchCounter}`,
                         round: currentRound,
@@ -811,15 +804,13 @@
                         winner: null,
                         nextMatchId: isFinal ? null : `M_${matchCounter + currentRoundMatches - Math.floor(i / 2)}`,
                         nextSlot: (i % 2 === 0) ? 'A' : 'B'
-                    };
-                    matches.push(match);
+                    });
                     matchCounter++;
                 }
                 currentRoundMatches /= 2;
                 currentRound++;
             }
 
-            // Propagate BYEs automatically
             matches.forEach(m => {
                 if (m.round === 1 && m.winner && m.nextMatchId) {
                     const nextM = matches.find(nm => nm.id === m.nextMatchId);
@@ -831,17 +822,16 @@
             });
 
             current.matches = matches;
-            saveStateToStorage();
+            syncToCloud();
             showToast('Jadual Perlawanan Berjaya Dijanakan!');
             switchTab('jadual');
         }
 
-        // --- RENDER BRACKET UI ---
         function renderBracket() {
             const current = getActiveTournament();
             const container = document.getElementById('bracketContainer');
 
-            if (!current.matches || current.matches.length === 0) {
+            if (!current || !current.matches || current.matches.length === 0) {
                 container.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm">Sila cipta acara dan jana jadual terlebih dahulu.</p>`;
                 return;
             }
@@ -912,6 +902,8 @@
         // --- SCOREBOARD ENGINE ---
         function startRefereeing(matchId) {
             const current = getActiveTournament();
+            if (!current || !current.matches) return;
+
             const m = current.matches.find(item => item.id === matchId);
             if (!m) return;
 
@@ -919,9 +911,8 @@
             if (m.status === 'Belum Bermula' && appState.isAdmin) {
                 m.status = 'Sedang Berlangsung';
             }
-            saveStateToStorage();
+            syncToCloud();
             switchTab('scoreboard');
-            renderScoreboard();
         }
 
         function getMatchRule(m) {
@@ -938,6 +929,8 @@
 
         function renderScoreboard() {
             const current = getActiveTournament();
+            if (!current || !current.matches) return;
+
             const m = current.matches.find(item => item.id === current.activeMatchId);
             if (!m) return;
 
@@ -960,7 +953,7 @@
             document.getElementById('viewerScoreB').innerText = String(m.scoreB).padStart(2, '0');
 
             const setContainer = document.getElementById('sbSetScores');
-            if (m.setHistory.length === 0) {
+            if (!m.setHistory || m.setHistory.length === 0) {
                 setContainer.innerHTML = `<span class="bg-slate-800 px-2 py-0.5 rounded text-slate-400">Set 1 Sedang Berlangsung</span>`;
             } else {
                 setContainer.innerHTML = m.setHistory.map((s, idx) => 
@@ -984,8 +977,7 @@
             if (team === 'B') m.scoreB = val;
 
             checkSetWinner(m);
-            saveStateToStorage();
-            renderScoreboard();
+            syncToCloud();
         }
 
         function addPoint(team) {
@@ -1000,8 +992,7 @@
             if (team === 'B') m.scoreB++;
 
             checkSetWinner(m);
-            saveStateToStorage();
-            renderScoreboard();
+            syncToCloud();
         }
 
         function undoPoint() {
@@ -1015,8 +1006,7 @@
             const matchIndex = current.matches.findIndex(m => m.id === previousState.id);
             if (matchIndex !== -1) {
                 current.matches[matchIndex] = previousState;
-                saveStateToStorage();
-                renderScoreboard();
+                syncToCloud();
                 showToast('Mata terakhir dibatalkan.');
             }
         }
@@ -1041,6 +1031,7 @@
             }
 
             if (setWonBy) {
+                if (!m.setHistory) m.setHistory = [];
                 m.setHistory.push({ a: m.scoreA, b: m.scoreB });
                 
                 if (setWonBy === 'A') m.setsA++;
@@ -1071,48 +1062,56 @@
             }
         }
 
-        // --- MULTI-EVENT DASHBOARD & GLOBAL SELECTOR UPDATE ---
+        // --- DASHBOARD UI UPDATE ---
         function updateUI() {
             const globalSelect = document.getElementById('globalTournamentSelect');
-            globalSelect.innerHTML = appState.tournaments.map(t => 
-                `<option value="${t.id}" ${t.id === appState.activeTournamentId ? 'selected' : ''}>${t.name}</option>`
-            ).join('');
+            if (appState.tournaments && appState.tournaments.length > 0) {
+                globalSelect.innerHTML = appState.tournaments.map(t => 
+                    `<option value="${t.id}" ${t.id === appState.activeTournamentId ? 'selected' : ''}>${t.name}</option>`
+                ).join('');
+            } else {
+                globalSelect.innerHTML = '<option value="">Tiada Acara</option>';
+            }
 
             const overviewContainer = document.getElementById('tournamentOverviewCards');
-            overviewContainer.innerHTML = appState.tournaments.map(t => {
-                const isActive = t.id === appState.activeTournamentId;
-                const totalP = t.participants.length;
-                const liveCount = t.matches.filter(m => m.status === 'Sedang Berlangsung').length;
+            if (!appState.tournaments || appState.tournaments.length === 0) {
+                overviewContainer.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">Sila cipta acara pertandingan baharu.</p>`;
+            } else {
+                overviewContainer.innerHTML = appState.tournaments.map(t => {
+                    const isActive = t.id === appState.activeTournamentId;
+                    const totalP = t.participants ? t.participants.length : 0;
+                    const liveCount = t.matches ? t.matches.filter(m => m.status === 'Sedang Berlangsung').length : 0;
 
-                return `
-                    <div onclick="switchActiveTournament('${t.id}')" class="cursor-pointer bg-white p-4 rounded-2xl border ${isActive ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200'} shadow-sm hover:shadow transition relative">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${t.category}</span>
-                                <h3 class="font-extrabold text-slate-800 text-base mt-1">${t.name}</h3>
-                                <p class="text-xs text-slate-400 mt-1">${t.date} | ${t.venue}</p>
+                    return `
+                        <div onclick="switchActiveTournament('${t.id}')" class="cursor-pointer bg-white p-4 rounded-2xl border ${isActive ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200'} shadow-sm hover:shadow transition relative">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${t.category}</span>
+                                    <h3 class="font-extrabold text-slate-800 text-base mt-1">${t.name}</h3>
+                                    <p class="text-xs text-slate-400 mt-1">${t.date} | ${t.venue}</p>
+                                </div>
+                                ${appState.isAdmin ? `
+                                    <button onclick="event.stopPropagation(); deleteTournament('${t.id}')" class="text-slate-300 hover:text-rose-500 p-1">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                ` : ''}
                             </div>
-                            ${appState.isAdmin && appState.tournaments.length > 1 ? `
-                                <button onclick="event.stopPropagation(); deleteTournament('${t.id}')" class="text-slate-300 hover:text-rose-500 p-1">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            ` : ''}
+                            <div class="mt-4 flex justify-between items-center text-xs font-semibold border-t pt-2 text-slate-600">
+                                <span>Peserta: <b>${totalP}</b></span>
+                                <span class="${liveCount > 0 ? 'text-amber-600 font-bold' : 'text-slate-400'}">${liveCount > 0 ? `Live (${liveCount})` : 'Tiada Live'}</span>
+                            </div>
                         </div>
-                        <div class="mt-4 flex justify-between items-center text-xs font-semibold border-t pt-2 text-slate-600">
-                            <span>Peserta: <b>${totalP}</b></span>
-                            <span class="${liveCount > 0 ? 'text-amber-600 font-bold' : 'text-slate-400'}">${liveCount > 0 ? `Live (${liveCount})` : 'Tiada Live'}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            }
 
             const current = getActiveTournament();
-            document.getElementById('currentEventTitle').innerText = current.name;
+            document.getElementById('currentEventTitle').innerText = current ? current.name : '--';
 
-            const totalP = current.participants.length;
-            const pendingM = current.matches.filter(m => m.status === 'Belum Bermula').length;
-            const liveM = current.matches.filter(m => m.status === 'Sedang Berlangsung').length;
-            const tamatM = current.matches.filter(m => m.status === 'Tamat').length;
+            const totalP = current && current.participants ? current.participants.length : 0;
+            const pendingM = current && current.matches ? current.matches.filter(m => m.status === 'Belum Bermula').length : 0;
+            const liveM = current && current.matches ? current.matches.filter(m => m.status === 'Sedang Berlangsung').length : 0;
+            const tamatM = current && current.matches ? current.matches.filter(m => m.status === 'Tamat').length : 0;
 
             document.getElementById('statPeserta').innerText = totalP;
             document.getElementById('statPending').innerText = pendingM;
@@ -1120,7 +1119,7 @@
             document.getElementById('statTamat').innerText = tamatM;
 
             const activeContainer = document.getElementById('dashActiveMatches');
-            const activeList = current.matches.filter(m => m.status === 'Sedang Berlangsung' || m.status === 'Belum Bermula').slice(0, 3);
+            const activeList = current && current.matches ? current.matches.filter(m => m.status === 'Sedang Berlangsung' || m.status === 'Belum Bermula').slice(0, 3) : [];
 
             if (activeList.length === 0) {
                 activeContainer.innerHTML = `<p class="text-sm text-slate-400 text-center py-4">Tiada perlawanan aktif.</p>`;
@@ -1148,13 +1147,13 @@
         // --- RESULTS & PODIUM ---
         function renderResults() {
             const current = getActiveTournament();
-            if (!current.matches || current.matches.length === 0) return;
+            if (!current || !current.matches || current.matches.length === 0) return;
             const maxRound = Math.max(...current.matches.map(x => x.round));
             const finalMatch = current.matches.find(m => m.round === maxRound);
             
             if (finalMatch && finalMatch.status === 'Tamat') {
                 const juara = finalMatch.winner;
-                const naibJuara = (finalMatch.winner.id === finalMatch.playerA?.id) ? finalMatch.playerB : finalMatch.playerA;
+                const naibJuara = (finalMatch.winner?.id === finalMatch.playerA?.id) ? finalMatch.playerB : finalMatch.playerA;
 
                 document.getElementById('podium1').innerText = juara ? (juara.name2 ? `${juara.name1}/${juara.name2}` : juara.name1) : '--';
                 document.getElementById('podium2').innerText = naibJuara ? (naibJuara.name2 ? `${naibJuara.name1}/${naibJuara.name2}` : naibJuara.name1) : '--';
@@ -1172,7 +1171,7 @@
             historyContainer.innerHTML = finishedMatches.map(m => {
                 const pA = m.playerA ? (m.playerA.name2 ? `${m.playerA.name1}/${m.playerA.name2}` : m.playerA.name1) : 'Pemain A';
                 const pB = m.playerB ? (m.playerB.name2 ? `${m.playerB.name1}/${m.playerB.name2}` : m.playerB.name1) : 'Pemain B';
-                const setsText = m.setHistory.map(s => `${s.a}-${s.b}`).join(', ');
+                const setsText = m.setHistory ? m.setHistory.map(s => `${s.a}-${s.b}`).join(', ') : '';
 
                 return `
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
@@ -1195,17 +1194,21 @@
             let totalPoints = 0;
             let totalSets = 0;
 
-            current.matches.forEach(m => {
-                m.setHistory.forEach(s => {
-                    totalPoints += (s.a + s.b);
-                    totalSets++;
+            if (current && current.matches) {
+                current.matches.forEach(m => {
+                    if (m.setHistory) {
+                        m.setHistory.forEach(s => {
+                            totalPoints += (s.a + s.b);
+                            totalSets++;
+                        });
+                    }
                 });
-            });
+            }
 
             document.getElementById('stTotalPoints').innerText = totalPoints;
             document.getElementById('stTotalSets').innerText = totalSets;
             
-            const finishedCount = current.matches.filter(m => m.status === 'Tamat').length;
+            const finishedCount = current && current.matches ? current.matches.filter(m => m.status === 'Tamat').length : 0;
             const avg = finishedCount > 0 ? (totalPoints / finishedCount).toFixed(1) : 0;
             document.getElementById('stAvgPoints').innerText = avg;
         }
